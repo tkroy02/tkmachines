@@ -3,15 +3,6 @@
 <head>
 <div id="header"></div>
 
-<script>
-  fetch('header.html')
-    .then(res => res.text())
-    .then(html => {
-      document.getElementById('header').innerHTML = html;
-    })
-    .catch(err => console.error('Header load error:', err));
-</script>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simple Task Manager with Firebase</title>
@@ -32,6 +23,15 @@
         import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
         import { getAnalytics } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics.js';
 
+<script>
+  fetch('header.html')
+    .then(res => res.text())
+    .then(html => {
+      document.getElementById('header').innerHTML = html;
+    })
+    .catch(err => console.error('Header load error:', err));
+</script>
+      
         // Your Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBcuCuqYrySz26d7CoQXZllePzMq3LEyWE",
