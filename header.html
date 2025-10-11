@@ -1,0 +1,169 @@
+<header class="tk-header">
+  <div class="header-container">
+    <div class="logo">
+      <i class="fas fa-tachometer-alt"></i>
+      <span>TK Dashboard</span>
+    </div>
+
+    <nav class="nav-menu" id="navMenu">
+      <a href="index.html" class="nav-link"><i class="fas fa-home"></i> Home</a>
+      <a href="Tkmarketing.html" class="nav-link"><i class="fas fa-chart-line"></i> Marketing</a>
+      <a href="Tkchats.html" class="nav-link"><i class="fas fa-comments"></i> Chats</a>
+      <a href="Tktask_manager.html" class="nav-link"><i class="fas fa-tasks"></i> Tasks</a>
+      <a href="Tkaccounting_manager.html" class="nav-link"><i class="fas fa-calculator"></i> Accounting</a>
+      <a href="gst-hst-calculator.html" class="nav-link"><i class="fas fa-file-invoice-dollar"></i> Tax</a>
+    </nav>
+
+    <div class="user-section">
+      <div class="user-avatar">
+        <i class="fas fa-user"></i>
+      </div>
+      <span id="admin-name">Admin</span>
+      <button id="logout-btn" class="logout-btn"><i class="fas fa-sign-out-alt"></i></button>
+      <button class="menu-toggle" id="menuToggle">
+        <i class="fas fa-bars"></i>
+      </button>
+    </div>
+  </div>
+</header>
+
+<style>
+  .tk-header {
+    background: linear-gradient(135deg, #3a86ff 0%, #8338ec 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    padding: 12px 25px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+  }
+
+  .header-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1400px;
+    margin: 0 auto;
+    flex-wrap: wrap;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  .logo i {
+    background: rgba(255,255,255,0.2);
+    padding: 8px;
+    border-radius: 50%;
+  }
+
+  .nav-menu {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .nav-link {
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 6px;
+    padding: 8px 12px;
+  }
+
+  .nav-link:hover {
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  .user-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .user-avatar {
+    background: rgba(255,255,255,0.2);
+    width: 35px;
+    height: 35px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+  }
+
+  .logout-btn {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: white;
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+
+  .logout-btn:hover {
+    background: rgba(255,255,255,0.3);
+  }
+
+  .menu-toggle {
+    display: none;
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+  }
+
+  @media (max-width: 768px) {
+    .nav-menu {
+      display: none;
+      flex-direction: column;
+      width: 100%;
+      background: rgba(0,0,0,0.15);
+      border-radius: 8px;
+      margin-top: 10px;
+      padding: 10px 0;
+    }
+
+    .nav-menu.active {
+      display: flex;
+    }
+
+    .menu-toggle {
+      display: block;
+    }
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const toggle = document.getElementById('menuToggle');
+    const menu = document.getElementById('navMenu');
+    if (toggle && menu) {
+      toggle.addEventListener('click', () => {
+        menu.classList.toggle('active');
+      });
+    }
+
+    // Optional: logout logic (if Firebase is already initialized)
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        if (window.firebase && firebase.auth) {
+          firebase.auth().signOut().then(() => {
+            window.location.href = 'index.html';
+          });
+        }
+      });
+    }
+  });
+</script>
