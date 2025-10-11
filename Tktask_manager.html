@@ -3,17 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Task Manager with Firebase 12.6</title>
+    <title>Simple Task Manager with Firebase</title>
+    
+    <!-- React 18 with proper createRoot -->
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
-    <!-- Firebase 12.6 SDK -->
-    <script src="https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/12.6.0/firebase-analytics.js"></script>
+    <!-- Firebase SDK - Using the stable version -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-analytics.js"></script>
     
     <style>
         .task-completed {
@@ -27,13 +31,25 @@
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useRef } = React;
 
         function TaskManager() {
             const [tasks, setTasks] = useState([]);
@@ -43,58 +59,57 @@
             const [editingId, setEditingId] = useState(null);
             const [editTitle, setEditTitle] = useState('');
             const [editDescription, setEditDescription] = useState('');
+            const [loading, setLoading] = useState(false);
             const [firebaseInitialized, setFirebaseInitialized] = useState(false);
-            const [loading, setLoading] = useState(true);
-            const [error, setError] = useState(null);
-            const [dbRef, setDbRef] = useState(null);
+            const [syncStatus, setSyncStatus] = useState('idle');
+            const rootRef = useRef(null);
 
-            // Initialize Firebase
+            // Initialize Firebase on component mount
             useEffect(() => {
-                const initFirebase = async () => {
-                    try {
-                        // Wait for Firebase to load
-                        let attempts = 0;
-                        while (!window.firebase && attempts < 50) {
-                            await new Promise(resolve => setTimeout(resolve, 100));
-                            attempts++;
-                        }
+                try {
+                    // Your Firebase configuration
+                    const firebaseConfig = {
+                        apiKey: "AIzaSyBcuCuqYrySz26d7CoQXZllePzMq3LEyWE",
+                        authDomain: "tkmachines-945b9.firebaseapp.com",
+                        projectId: "tkmachines-945b9",
+                        storageBucket: "tkmachines-945b9.firebasestorage.app",
+                        messagingSenderId: "137087394703",
+                        appId: "1:137087394703:web:81c3383fd6ee961ef3e1fa",
+                        measurementId: "G-Y8GH34Q2FN"
+                    };
 
-                        if (!window.firebase) {
-                            throw new Error("Firebase SDK failed to load");
-                        }
-
-                        const firebaseConfig = {
-                            apiKey: "AIzaSyBcuCuqYrySz26d7CoQXZllePzMq3LEyWE",
-                            authDomain: "tkmachines-945b9.firebaseapp.com",
-                            projectId: "tkmachines-945b9",
-                            storageBucket: "tkmachines-945b9.firebasestorage.app",
-                            messagingSenderId: "137087394703",
-                            appId: "1:137087394703:web:81c3383fd6ee961ef3e1fa",
-                            measurementId: "G_Y8GH34Q2FN"
-                        };
-
-                        // Initialize Firebase
-                        const app = window.firebase.initializeApp(firebaseConfig);
-                        window.firebase.analytics(app);
-                        setDbRef(window.firebase.firestore());
-                        setFirebaseInitialized(true);
-                        console.log("Firebase 12.6 initialized successfully");
-                    } catch (error) {
-                        console.error("Firebase initialization error:", error);
-                        setError("Firebase failed to initialize. Working offline.");
-                    } finally {
-                        setLoading(false);
+                    // Initialize Firebase
+                    firebase.initializeApp(firebaseConfig);
+                    
+                    // Initialize Analytics (optional)
+                    firebase.analytics();
+                    
+                    setFirebaseInitialized(true);
+                    console.log("Firebase initialized successfully");
+                    
+                    // Load initial data from localStorage as fallback
+                    const savedTasks = localStorage.getItem('tasks');
+                    if (savedTasks) {
+                        setTasks(JSON.parse(savedTasks));
                     }
-                };
-
-                initFirebase();
+                    
+                } catch (error) {
+                    console.error("Firebase initialization error:", error);
+                    // Load from localStorage if Firebase fails
+                    const savedTasks = localStorage.getItem('tasks');
+                    if (savedTasks) {
+                        setTasks(JSON.parse(savedTasks));
+                    }
+                }
             }, []);
 
-            // Load tasks from Firebase
+            // Set up real-time Firestore listener
             useEffect(() => {
-                if (!firebaseInitialized || !dbRef) return;
+                if (!firebaseInitialized) return;
 
-                const unsubscribe = dbRef?.collection("tasks")
+                const db = firebase.firestore();
+                
+                const unsubscribe = db.collection("tasks")
                     .orderBy("createdAt", "desc")
                     .onSnapshot(
                         (snapshot) => {
@@ -104,83 +119,116 @@
                                 tasksArray.push({ 
                                     id: doc.id, 
                                     ...data,
-                                    createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date()
+                                    // Handle Firebase timestamp conversion
+                                    createdAt: data.createdAt ? data.createdAt.toDate().toLocaleDateString() : new Date().toLocaleDateString()
                                 });
                             });
                             setTasks(tasksArray);
+                            setSyncStatus('synced');
                         },
                         (error) => {
                             console.error("Error fetching tasks:", error);
-                            setError("Failed to load tasks from Firebase");
+                            setSyncStatus('error');
+                            // Fallback to localStorage
+                            const savedTasks = localStorage.getItem('tasks');
+                            if (savedTasks) {
+                                setTasks(JSON.parse(savedTasks));
+                            }
                         }
                     );
 
                 return () => unsubscribe();
-            }, [firebaseInitialized, dbRef]);
+            }, [firebaseInitialized]);
+
+            // Save to localStorage as backup whenever tasks change
+            useEffect(() => {
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+            }, [tasks]);
 
             const addTask = async (e) => {
                 e.preventDefault();
                 if (!title.trim()) return;
 
+                setLoading(true);
+                setSyncStatus('syncing');
+
                 const newTask = {
                     title: title.trim(),
                     description: description.trim(),
                     completed: false,
-                    createdAt: new Date()
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
 
                 try {
-                    if (firebaseInitialized && dbRef) {
-                        await dbRef.collection("tasks").add(newTask);
-                    } else {
-                        // Local fallback
-                        setTasks([{ ...newTask, id: Date.now().toString() }, ...tasks]);
-                    }
+                    const db = firebase.firestore();
+                    await db.collection("tasks").add(newTask);
                     setTitle('');
                     setDescription('');
+                    setSyncStatus('synced');
                 } catch (error) {
                     console.error("Error adding task:", error);
-                    setError("Failed to add task");
+                    setSyncStatus('error');
+                    // Fallback to local state
+                    const localTask = {
+                        ...newTask,
+                        id: Date.now().toString(),
+                        createdAt: new Date().toISOString()
+                    };
+                    setTasks([localTask, ...tasks]);
+                    setTitle('');
+                    setDescription('');
+                } finally {
+                    setLoading(false);
                 }
             };
 
             const deleteTask = async (id) => {
+                setLoading(true);
+                setSyncStatus('syncing');
+
                 try {
-                    if (firebaseInitialized && dbRef) {
-                        await dbRef.collection("tasks").doc(id).delete();
-                    } else {
-                        setTasks(tasks.filter(task => task.id !== id));
-                    }
+                    const db = firebase.firestore();
+                    await db.collection("tasks").doc(id).delete();
+                    setSyncStatus('synced');
                 } catch (error) {
                     console.error("Error deleting task:", error);
-                    setError("Failed to delete task");
+                    setSyncStatus('error');
+                    // Fallback to local state
+                    setTasks(tasks.filter(task => task.id !== id));
+                } finally {
+                    setLoading(false);
                 }
             };
 
             const toggleComplete = async (id) => {
+                setLoading(true);
+                setSyncStatus('syncing');
+
                 const taskToUpdate = tasks.find(task => task.id === id);
-                if (!taskToUpdate) return;
+                const updatedStatus = !taskToUpdate.completed;
 
                 try {
-                    if (firebaseInitialized && dbRef) {
-                        await dbRef.collection("tasks").doc(id).update({
-                            completed: !taskToUpdate.completed
-                        });
-                    } else {
-                        setTasks(tasks.map(task =>
-                            task.id === id ? { ...task, completed: !task.completed } : task
-                        ));
-                    }
+                    const db = firebase.firestore();
+                    await db.collection("tasks").doc(id).update({
+                        completed: updatedStatus
+                    });
+                    setSyncStatus('synced');
                 } catch (error) {
                     console.error("Error updating task:", error);
-                    setError("Failed to update task");
+                    setSyncStatus('error');
+                    // Fallback to local state
+                    setTasks(tasks.map(task =>
+                        task.id === id ? { ...task, completed: updatedStatus } : task
+                    ));
+                } finally {
+                    setLoading(false);
                 }
             };
 
             const startEditing = (task) => {
                 setEditingId(task.id);
                 setEditTitle(task.title);
-                setEditDescription(task.description);
+                setEditDescription(task.description || '');
             };
 
             const cancelEditing = () => {
@@ -192,43 +240,57 @@
             const saveEdit = async () => {
                 if (!editTitle.trim()) return;
 
+                setLoading(true);
+                setSyncStatus('syncing');
+
                 try {
-                    if (firebaseInitialized && dbRef) {
-                        await dbRef.collection("tasks").doc(editingId).update({
-                            title: editTitle.trim(),
-                            description: editDescription.trim()
-                        });
-                    } else {
-                        setTasks(tasks.map(task =>
-                            task.id === editingId
-                                ? { ...task, title: editTitle.trim(), description: editDescription.trim() }
-                                : task
-                        ));
-                    }
+                    const db = firebase.firestore();
+                    await db.collection("tasks").doc(editingId).update({
+                        title: editTitle.trim(),
+                        description: editDescription.trim()
+                    });
                     cancelEditing();
+                    setSyncStatus('synced');
                 } catch (error) {
                     console.error("Error updating task:", error);
-                    setError("Failed to save changes");
+                    setSyncStatus('error');
+                    // Fallback to local state
+                    setTasks(tasks.map(task =>
+                        task.id === editingId
+                            ? { ...task, title: editTitle.trim(), description: editDescription.trim() }
+                            : task
+                    ));
+                    cancelEditing();
+                } finally {
+                    setLoading(false);
                 }
             };
 
             const clearCompleted = async () => {
                 const completedTasks = tasks.filter(task => task.completed);
-                
+                if (completedTasks.length === 0) return;
+
+                setLoading(true);
+                setSyncStatus('syncing');
+
                 try {
-                    if (firebaseInitialized && dbRef) {
-                        const batch = dbRef.batch();
-                        completedTasks.forEach(task => {
-                            const taskRef = dbRef.collection("tasks").doc(task.id);
-                            batch.delete(taskRef);
-                        });
-                        await batch.commit();
-                    } else {
-                        setTasks(tasks.filter(task => !task.completed));
-                    }
+                    const db = firebase.firestore();
+                    const batch = db.batch();
+                    
+                    completedTasks.forEach(task => {
+                        const taskRef = db.collection("tasks").doc(task.id);
+                        batch.delete(taskRef);
+                    });
+                    
+                    await batch.commit();
+                    setSyncStatus('synced');
                 } catch (error) {
                     console.error("Error clearing completed tasks:", error);
-                    setError("Failed to clear completed tasks");
+                    setSyncStatus('error');
+                    // Fallback to local state
+                    setTasks(tasks.filter(task => !task.completed));
+                } finally {
+                    setLoading(false);
                 }
             };
 
@@ -241,6 +303,15 @@
             const completedCount = tasks.filter(task => task.completed).length;
             const activeCount = tasks.length - completedCount;
 
+            // Status message based on sync state
+            const getStatusMessage = () => {
+                if (!firebaseInitialized) return "Initializing Firebase...";
+                if (syncStatus === 'syncing') return "Syncing with cloud...";
+                if (syncStatus === 'error') return "Sync error - using local storage";
+                if (syncStatus === 'synced') return "All tasks synced with cloud ☁️";
+                return "Connected to Firebase";
+            };
+
             return (
                 <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-100 py-8 px-4">
                     <div className="max-w-2xl mx-auto">
@@ -250,22 +321,18 @@
                                 <i className="fas fa-tasks text-blue-500 mr-3"></i>
                                 Task Manager
                             </h1>
-                            <p className="text-gray-600">
-                                {firebaseInitialized 
-                                    ? "Powered by Firebase 12.6 ☁️" 
-                                    : loading
-                                    ? "Initializing Firebase..."
-                                    : "Working offline"}
-                            </p>
-                        </div>
-
-                        {/* Error Message */}
-                        {error && (
-                            <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-3 rounded-lg mb-4">
-                                <i className="fas fa-exclamation-triangle mr-2"></i>
-                                {error}
+                            <div className="flex items-center justify-center gap-2 text-sm">
+                                {syncStatus === 'syncing' && <div className="loading"></div>}
+                                <span className={`px-3 py-1 rounded-full ${
+                                    !firebaseInitialized ? 'bg-yellow-100 text-yellow-800' :
+                                    syncStatus === 'error' ? 'bg-red-100 text-red-800' :
+                                    syncStatus === 'syncing' ? 'bg-blue-100 text-blue-800' :
+                                    'bg-green-100 text-green-800'
+                                }`}>
+                                    {getStatusMessage()}
+                                </span>
                             </div>
-                        )}
+                        </div>
 
                         {/* Stats Cards */}
                         <div className="grid grid-cols-3 gap-4 mb-6">
@@ -301,6 +368,7 @@
                                         placeholder="What needs to be done?"
                                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         required
+                                        disabled={loading}
                                     />
                                 </div>
                                 <div>
@@ -313,6 +381,7 @@
                                         placeholder="Add some details..."
                                         rows="3"
                                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        disabled={loading}
                                     />
                                 </div>
                                 <div className="flex gap-2">
@@ -320,14 +389,17 @@
                                         <>
                                             <button
                                                 type="submit"
-                                                className="flex-1 bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition duration-200"
+                                                className="flex-1 bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition duration-200 disabled:opacity-50 flex items-center justify-center"
+                                                disabled={loading}
                                             >
-                                                <i className="fas fa-save mr-2"></i>Save Changes
+                                                {loading ? <div className="loading mr-2"></div> : <i className="fas fa-save mr-2"></i>}
+                                                Save Changes
                                             </button>
                                             <button
                                                 type="button"
                                                 onClick={cancelEditing}
-                                                className="bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600 transition duration-200"
+                                                className="bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600 transition duration-200 disabled:opacity-50"
+                                                disabled={loading}
                                             >
                                                 Cancel
                                             </button>
@@ -335,9 +407,11 @@
                                     ) : (
                                         <button
                                             type="submit"
-                                            className="w-full bg-blue-500 text-white py-3 px-4 rounded-lg hover:bg-blue-600 transition duration-200 font-semibold"
+                                            className="w-full bg-blue-500 text-white py-3 px-4 rounded-lg hover:bg-blue-600 transition duration-200 font-semibold disabled:opacity-50 flex items-center justify-center"
+                                            disabled={loading}
                                         >
-                                            <i className="fas fa-plus mr-2"></i>Add Task
+                                            {loading ? <div className="loading mr-2"></div> : <i className="fas fa-plus mr-2"></i>}
+                                            Add Task
                                         </button>
                                     )}
                                 </div>
@@ -355,7 +429,8 @@
                                             filter === f
                                                 ? 'bg-blue-500 text-white'
                                                 : 'bg-white text-gray-700 hover:bg-gray-100'
-                                        }`}
+                                        } disabled:opacity-50`}
+                                        disabled={loading}
                                     >
                                         {f}
                                     </button>
@@ -364,16 +439,23 @@
                             {completedCount > 0 && (
                                 <button
                                     onClick={clearCompleted}
-                                    className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition duration-200"
+                                    className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition duration-200 disabled:opacity-50 flex items-center justify-center"
+                                    disabled={loading}
                                 >
-                                    <i className="fas fa-trash mr-2"></i>Clear Completed
+                                    {loading ? <div className="loading mr-2"></div> : <i className="fas fa-trash mr-2"></i>}
+                                    Clear Completed
                                 </button>
                             )}
                         </div>
 
                         {/* Task List */}
                         <div className="space-y-3">
-                            {filteredTasks.length === 0 ? (
+                            {loading && tasks.length === 0 ? (
+                                <div className="bg-white rounded-xl shadow p-8 text-center">
+                                    <div className="loading mx-auto mb-4" style={{width: '40px', height: '40px'}}></div>
+                                    <p className="text-gray-500 text-lg">Loading tasks...</p>
+                                </div>
+                            ) : filteredTasks.length === 0 ? (
                                 <div className="bg-white rounded-xl shadow p-8 text-center">
                                     <i className="fas fa-inbox text-4xl text-gray-300 mb-4"></i>
                                     <p className="text-gray-500 text-lg">
@@ -396,23 +478,28 @@
                                                         value={editTitle}
                                                         onChange={(e) => setEditTitle(e.target.value)}
                                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg font-semibold"
+                                                        disabled={loading}
                                                     />
                                                     <textarea
                                                         value={editDescription}
                                                         onChange={(e) => setEditDescription(e.target.value)}
                                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                                                         rows="2"
+                                                        disabled={loading}
                                                     />
                                                     <div className="flex gap-2">
                                                         <button
                                                             onClick={saveEdit}
-                                                            className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
+                                                            className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 disabled:opacity-50 flex items-center justify-center"
+                                                            disabled={loading}
                                                         >
+                                                            {loading && <div className="loading mr-2"></div>}
                                                             Save
                                                         </button>
                                                         <button
                                                             onClick={cancelEditing}
-                                                            className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
+                                                            className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 disabled:opacity-50"
+                                                            disabled={loading}
                                                         >
                                                             Cancel
                                                         </button>
@@ -427,7 +514,8 @@
                                                                 task.completed
                                                                     ? 'bg-green-500 border-green-500 text-white'
                                                                     : 'border-gray-300 hover:border-green-400'
-                                                            }`}
+                                                            } disabled:opacity-50`}
+                                                            disabled={loading}
                                                         >
                                                             {task.completed && <i className="fas fa-check text-xs"></i>}
                                                         </button>
@@ -441,15 +529,18 @@
                                                             <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
                                                                 <span>
                                                                     <i className="fas fa-calendar mr-1"></i>
-                                                                    {task.createdAt ? 
-                                                                        new Date(task.createdAt).toLocaleDateString() 
-                                                                        : 'Recently'
-                                                                    }
+                                                                    {task.createdAt}
                                                                 </span>
                                                                 {task.completed && (
                                                                     <span className="text-green-500">
                                                                         <i className="fas fa-check-circle mr-1"></i>
                                                                         Completed
+                                                                    </span>
+                                                                )}
+                                                                {firebaseInitialized && syncStatus === 'synced' && (
+                                                                    <span className="text-blue-500">
+                                                                        <i className="fas fa-cloud mr-1"></i>
+                                                                        Cloud
                                                                     </span>
                                                                 )}
                                                             </div>
@@ -458,15 +549,17 @@
                                                     <div className="flex gap-1 ml-2">
                                                         <button
                                                             onClick={() => startEditing(task)}
-                                                            className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition duration-200"
+                                                            className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition duration-200 disabled:opacity-50"
                                                             title="Edit task"
+                                                            disabled={loading}
                                                         >
                                                             <i className="fas fa-edit"></i>
                                                         </button>
                                                         <button
                                                             onClick={() => deleteTask(task.id)}
-                                                            className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition duration-200"
+                                                            className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition duration-200 disabled:opacity-50"
                                                             title="Delete task"
+                                                            disabled={loading}
                                                         >
                                                             <i className="fas fa-trash"></i>
                                                         </button>
@@ -481,15 +574,17 @@
 
                         {/* Footer */}
                         <div className="text-center mt-8 text-gray-500 text-sm">
-                            <p>Powered by Firebase 12.6 with real-time sync ☁️</p>
-                            <p>Your tasks are saved to the cloud and synchronized across devices.</p>
+                            <p>Built with React 18 and Firebase Firestore</p>
+                            <p>Tasks automatically sync to the cloud and persist locally</p>
                         </div>
                     </div>
                 </div>
             );
         }
 
-        ReactDOM.render(<TaskManager />, document.getElementById('root'));
+        // Use React 18 createRoot instead of ReactDOM.render
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<TaskManager />);
     </script>
 </body>
 </html>
