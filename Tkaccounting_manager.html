@@ -1,1 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Accounting Manager</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 
+    <style>
+    .fade-in { animation: fadeIn 0.3s ease-in; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    .positive { color: #10b981; }
+    .negative { color: #ef4444; }
+    .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .glass-effect { 
+        backdrop-filter: blur(10px);
+        background: rgba(255, 255, 255, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .chart-container { position: relative; height: 300px; }
+    .progress-ring {
+        transform: rotate(-90deg);
+    }
+    .progress-ring-circle {
+        transition: stroke-dashoffset 0.5s ease;
+        transform-origin: 50% 50%;
+    }
+    .hover-lift { transition: all 0.3s ease; }
+    .hover-lift:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+</style>
+<div id="header"></div>
+<script>
+  fetch('header.html')
+    .then(res => res.text())
+    .then(html => {
+      document.getElementById('header').innerHTML = html;
+    })
+    .catch(err => console.error('Header load error:', err));
+</script>
+
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        function AccountingApp() {
+            // State for transactions
+            const [transactions, setTransactions] = useState([]);
+            const [description, setDescription] = useState('');
+            const [amount, setAmount] = useState('');
+            const [type, setType] = useState('revenue');
+            const [category, setCategory] = useState('');
+            const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+            
+            // State for filtering and views
+            const [filter, setFilter] = useState('all');
+            const [timeRange, setTimeRange] = useState('all');
+            const [editingId, setEditingId] = useState(null);
+            const [editData, setEditData] = useState({});
+            const [activeTab, setActiveTab] = useState('overview');
+
+            // Chart references
+            const financialChartRef = useRef(null);
+            const categoryChartRef = useRef(null);
+            const trendChartRef = useRef(null);
+            const cashFlowChartRef = useRef(null);
+
+            // Categories
+            const revenueCategories = ['Sales', 'Services', 'Investments', 'Other Income'];
+            const expenseCategories = ['Supplies', 'Salaries', 'Rent', 'Utilities', 'Marketing', 'Travel', 'Equipment', 'Other Expenses'];
+
+            // Initialize charts when data changes
+            useEffect(() => {
+                if (transactions.length > 0) {
+                    setTimeout(() => {
+                        renderFinancialChart();
+                        renderCategoryChart();
+                        renderTrendChart();
+                        renderCashFlowChart();
+                    }, 0);
+                }
+            }, [transactions, filter, timeRange]);
+
+            // Calculations
+            const calculateTotals = () => {
+                const filtered = filterTransactions();
+                const revenue = filtered
+                    .filter(t => t.type === 'revenue')
+                    .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+                
+                const expenses = filtered
+                    .filter(t => t.type === 'expense')
+                    .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+                
+                const profit = revenue - expenses;
+                const profitMargin = revenue > 0 ? (profit / revenue) * 100 : 0;
+
+                return { revenue, expenses, profit, profitMargin };
+            };
+
+            const filterTransactions = () => {
+                let filtered = transactions;
+                
+                if (filter !== 'all') {
+                    filtered = filtered.filter(t => t.type === filter);
+                }
+                
+                const now = new Date();
+                if (timeRange === 'month') {
+                    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                    filtered = filtered.filter(t => new Date(t.date) >= startOfMonth);
+                } else if (timeRange === 'week') {
+                    const startOfWeek = new Date(now);
+                    startOfWeek.setDate(now.getDate() - now.getDay());
+                    filtered = filtered.filter(t => new Date(t.date) >= startOfWeek);
+                }
+                
+                return filtered;
+            };
+
+            const addTransaction = (e) => {
+                e.preventDefault();
+                if (!description.trim() || !amount || !category) return;
+
+                const newTransaction = {
+                    id: Date.now().toString(),
+                    description: description.trim(),
+                    amount: parseFloat(amount),
+                    type,
+                    category,
+                    date,
+                    createdAt: new Date().toISOString()
+                };
+
+                setTransactions([newTransaction, ...transactions]);
+                resetForm();
+            };
+
+            const deleteTransaction = (id) => {
+                setTransactions(transactions.filter(t => t.id !== id));
+            };
+
+            const startEditing = (transaction) => {
+                setEditingId(transaction.id);
+                setEditData({ ...transaction });
+            };
+
+            const cancelEditing = () => {
+                setEditingId(null);
+                setEditData({});
+            };
+
+            const saveEdit = () => {
+                setTransactions(transactions.map(t => 
+                    t.id === editingId ? { ...editData, amount: parseFloat(editData.amount) } : t
+                ));
+                cancelEditing();
+            };
+
+            const resetForm = () => {
+                setDescription('');
+                setAmount('');
+                setCategory('');
+                setDate(new Date().toISOString().split('T')[0]);
+            };
+
+            const formatCurrency = (value) => {
+                return new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'USD'
+                }).format(value);
+            };
+
+            const { revenue, expenses, profit, profitMargin } = calculateTotals();
+            const filteredTransactions = filterTransactions();
+
+            const categoryBreakdown = () => {
+                const breakdown = {};
+                filteredTransactions.forEach(t => {
+                    if (!breakdown[t.category]) breakdown[t.category] = 0;
+                    breakdown[t.category] += t.amount;
+                });
+                return breakdown;
+            };
+
+            const getMonthlyTrendData = () => {
+                const monthlyData = {};
+                const now = new Date();
+                const months = [];
+                
+                for (let i = 5; i >= 0; i--) {
+                    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                    const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+                    months.push(monthKey);
+                    monthlyData[monthKey] = { revenue: 0, expenses: 0 };
+                }
+                
+                transactions.forEach(t => {
+                    const date = new Date(t.date);
+                    const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+                    
+                    if (monthlyData[monthKey]) {
+                        if (t.type === 'revenue') {
+                            monthlyData[monthKey].revenue += t.amount;
+                        } else {
+                            monthlyData[monthKey].expenses += t.amount;
+                        }
+                    }
+                });
+                
+                return {
+                    labels: months,
+                    revenue: months.map(m => monthlyData[m].revenue),
+                    expenses: months.map(m => monthlyData[m].expenses)
+                };
+            };
+
+            const getCashFlowData = () => {
+                const cashFlow = { revenue: 0, expenses: 0 };
+                const now = new Date();
+                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                
+                transactions
+                    .filter(t => new Date(t.date) >= startOfMonth)
+                    .forEach(t => {
+                        if (t.type === 'revenue') {
+                            cashFlow.revenue += t.amount;
+                        } else {
+                            cashFlow.expenses += t.amount;
+                        }
+                    });
+                
+                return cashFlow;
+            };
+
+            const renderFinancialChart = () => {
+                const ctx = financialChartRef.current?.getContext('2d');
+                if (!ctx) return;
+                
+                if (window.financialChart) {
+                    window.financialChart.destroy();
+                }
+                
+                const data = {
+                    labels: ['Revenue', 'Expenses', 'Profit'],
+                    datasets: [{
+                        data: [revenue, expenses, profit],
+                        backgroundColor: [
+                            'rgba(16, 185, 129, 0.8)',
+                            'rgba(239, 68, 68, 0.8)',
+                            'rgba(59, 130, 246, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgb(16, 185, 129)',
+                            'rgb(239, 68, 68)',
+                            'rgb(59, 130, 246)'
+                        ],
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        borderSkipped: false,
+                    }]
+                };
+                
+                window.financialChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: data,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.label}: ${formatCurrency(context.raw)}`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return formatCurrency(value);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            };
+
+            const renderCategoryChart = () => {
+                const ctx = categoryChartRef.current?.getContext('2d');
+                if (!ctx) return;
+                
+                if (window.categoryChart) {
+                    window.categoryChart.destroy();
+                }
+                
+                const breakdown = categoryBreakdown();
+                const labels = Object.keys(breakdown);
+                const data = Object.values(breakdown);
+                
+                const backgroundColors = labels.map((_, i) => {
+                    const hue = (i * 137.5) % 360;
+                    return `hsla(${hue}, 70%, 65%, 0.8)`;
+                });
+                
+                const borderColors = labels.map((_, i) => {
+                    const hue = (i * 137.5) % 360;
+                    return `hsl(${hue}, 70%, 50%)`;
+                });
+                
+                window.categoryChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: data,
+                            backgroundColor: backgroundColors,
+                            borderColor: borderColors,
+                            borderWidth: 2,
+                            hoverOffset: 15
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    boxWidth: 12,
+                                    padding: 15
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const value = context.raw;
+                                        const total = data.reduce((a, b) => a + b, 0);
+                                        const percentage = ((value / total) * 100).toFixed(1);
+                                        return `${context.label}: ${formatCurrency(value)} (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            };
+
+            const renderTrendChart = () => {
+                const ctx = trendChartRef.current?.getContext('2d');
+                if (!ctx) return;
+                
+                if (window.trendChart) {
+                    window.trendChart.destroy();
+                }
+                
+                const trendData = getMonthlyTrendData();
+                
+                window.trendChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: trendData.labels,
+                        datasets: [
+                            {
+                                label: 'Revenue',
+                                data: trendData.revenue,
+                                borderColor: 'rgb(16, 185, 129)',
+                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                tension: 0.3,
+                                fill: true
+                            },
+                            {
+                                label: 'Expenses',
+                                data: trendData.expenses,
+                                borderColor: 'rgb(239, 68, 68)',
+                                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                tension: 0.3,
+                                fill: true
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.dataset.label}: ${formatCurrency(context.raw)}`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return formatCurrency(value);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            };
+
+            const renderCashFlowChart = () => {
+                const ctx = cashFlowChartRef.current?.getContext('2d');
+                if (!ctx) return;
+                
+                if (window.cashFlowChart) {
+                    window.cashFlowChart.destroy();
+                }
+                
+                const cashFlow = getCashFlowData();
+                
+                window.cashFlowChart = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Revenue', 'Expenses'],
+                        datasets: [{
+                            data: [cashFlow.revenue, cashFlow.expenses],
+                            backgroundColor: [
+                                'rgba(16, 185, 129, 0.8)',
+                                'rgba(239, 68, 68, 0.8)'
+                            ],
+                            borderColor: [
+                                'rgb(16, 185, 129)',
+                                'rgb(239, 68, 68)'
+                            ],
+                            borderWidth: 2,
+                            hoverOffset: 15
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.label}: ${formatCurrency(context.raw)}`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            };
+
+            const ProgressRing = ({ value, max, size = 120, strokeWidth = 10, color }) => {
+                const radius = (size - strokeWidth) / 2;
+                const circumference = radius * 2 * Math.PI;
+                const strokeDashoffset = circumference - (value / max) * circumference;
+                
+                return (
+                    <svg width={size} height={size} className="progress-ring">
+                        <circle
+                            className="progress-ring-circle"
+                            stroke={color}
+                            strokeWidth={strokeWidth}
+                            strokeDasharray={circumference}
+                            strokeDashoffset={strokeDashoffset}
+                            strokeLinecap="round"
+                            fill="transparent"
+                            r={radius}
+                            cx={size / 2}
+                            cy={size / 2}
+                        />
+                        <text 
+                            x="50%" 
+                            y="50%" 
+                            textAnchor="middle" 
+                            dy=".3em" 
+                            fontSize="16" 
+                            fontWeight="bold"
+                            fill={color}
+                        >
+                            {Math.round((value / max) * 100)}%
+                        </text>
+                    </svg>
+                );
+            };
+
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-8 px-4">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="text-center mb-8">
+                            <h1 className="text-4xl font-bold text-gray-800 mb-2">
+                                <i className="fas fa-chart-line text-purple-500 mr-3"></i>
+                                Modern Accounting Manager
+                            </h1>
+                            <p className="text-gray-600">Track revenue, expenses, and profits with advanced analytics</p>
+                        </div>
+
+                        <div className="flex justify-center mb-8">
+                            <div className="glass-effect rounded-xl p-1 flex">
+                                {['overview', 'analytics', 'transactions'].map(tab => (
+                                    <button
+                                        key={tab}
+                                        onClick={() => setActiveTab(tab)}
+                                        className={`px-6 py-3 rounded-lg capitalize font-medium transition-all duration-300 ${
+                                            activeTab === tab
+                                                ? 'bg-white text-purple-600 shadow-md'
+                                                : 'text-gray-600 hover:text-purple-500'
+                                        }`}
+                                    >
+                                        <i className={`fas ${
+                                            tab === 'overview' ? 'fa-home' :
+                                            tab === 'analytics' ? 'fa-chart-bar' : 'fa-receipt'
+                                        } mr-2`}></i>
+                                        {tab}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                            <div className="bg-white rounded-xl shadow-lg p-6 text-center hover-lift">
+                                <div className="text-2xl font-bold text-green-600">{formatCurrency(revenue)}</div>
+                                <div className="text-sm text-gray-600">Total Revenue</div>
+                                <i className="fas fa-arrow-up text-green-500 mt-2"></i>
+                            </div>
+                            <div className="bg-white rounded-xl shadow-lg p-6 text-center hover-lift">
+                                <div className="text-2xl font-bold text-red-600">{formatCurrency(expenses)}</div>
+                                <div className="text-sm text-gray-600">Total Expenses</div>
+                                <i className="fas fa-arrow-down text-red-500 mt-2"></i>
+                            </div>
+                            <div className="bg-white rounded-xl shadow-lg p-6 text-center hover-lift">
+                                <div className={`text-2xl font-bold ${profit >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                                    {formatCurrency(profit)}
+                                </div>
+                                <div className="text-sm text-gray-600">Net Profit</div>
+                                <i className={`fas ${profit >= 0 ? 'fa-smile text-blue-500' : 'fa-frown text-red-500'} mt-2`}></i>
+                            </div>
+                            <div className="bg-white rounded-xl shadow-lg p-6 text-center hover-lift">
+                                <div className={`text-2xl font-bold ${profitMargin >= 0 ? 'text-purple-600' : 'text-red-600'}`}>
+                                    {profitMargin.toFixed(1)}%
+                                </div>
+                                <div className="text-sm text-gray-600">Profit Margin</div>
+                                <i className="fas fa-percentage text-purple-500 mt-2"></i>
+                            </div>
+                        </div>
+
+                        {activeTab === 'overview' && (
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                <div className="lg:col-span-1 space-y-6">
+                                    <div className="bg-white rounded-xl shadow-lg p-6 hover-lift">
+                                        <h2 className="text-xl font-semibold mb-4 text-gray-800">
+                                            <i className="fas fa-plus-circle text-green-500 mr-2"></i>
+                                            {editingId ? 'Edit Transaction' : 'Add Transaction'}
+                                        </h2>
+                                        <form onSubmit={editingId ? saveEdit : addTransaction} className="space-y-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    Type *
+                                                </label>
+                                                <select
+                                                    value={editingId ? editData.type : type}
+                                                    onChange={(e) => editingId 
+                                                        ? setEditData({...editData, type: e.target.value})
+                                                        : setType(e.target.value)
+                                                    }
+                                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                                                    required
+                                                >
+                                                    <option value="revenue">Revenue</option>
+                                                    <option value="expense">Expense</option>
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    Category *
+                                                </label>
+                                                <select
+                                                    value={editingId ? editData.category : category}
+                                                    onChange={(e) => editingId
+                                                        ? setEditData({...editData, category: e.target.value})
+                                                        : setCategory(e.target.value)
+                                                    }
+                                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                                                    required
+                                                >
+                                                    <option value="">Select Category</option>
+                                                    {(editingId ? editData.type : type) === 'revenue' 
+                                                        ? revenueCategories.map(cat => (
+                                                            <option key={cat} value={cat}>{cat}</option>
+                                                        ))
+                                                        : expenseCategories.map(cat => (
+                                                            <option key={cat} value={cat}>{cat}</option>
+                                                        ))
+                                                    }
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    Description *
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    value={editingId ? editData.description : description}
+                                                    onChange={(e) => editingId
+                                                        ? setEditData({...editData, description: e.target.value})
+                                                        : setDescription(e.target.value)
+                                                    }
+                                                    placeholder="Transaction description"
+                                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                                                    required
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    Amount *
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    step="0.01"
+                                                    value={editingId ? editData.amount : amount}
+                                                    onChange={(e) => editingId
+                                                        ? setEditData({...editData, amount: e.target.value})
+                                                        : setAmount(e.target.value)
+                                                    }
+                                                    placeholder="0.00"
+                                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                                                    required
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    Date *
+                                                </label>
+                                                <input
+                                                    type="date"
+                                                    value={editingId ? editData.date : date}
+                                                    onChange={(e) => editingId
+                                                        ? setEditData({...editData, date: e.target.value})
+                                                        : setDate(e.target.value)
+                                                    }
+                                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                                                    required
+                                                />
+                                            </div>
+
+                                            <div className="flex gap-2">
+                                                {editingId ? (
+                                                    <>
+                                                        <button
+                                                            type="submit"
+                                                            className="flex-1 bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition duration-200"
+                                                        >
+                                                            <i className="fas fa-save mr-2"></i>Save Changes
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={cancelEditing}
+                                                            className="bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600 transition duration-200"
+                                                        >
+                                                            Cancel
+                                                        </button>
+                                                    </>
+                                                ) : (
+                                                    <button
+                                                        type="submit"
+                                                        className="w-full bg-green-500 text-white py-3 px-4 rounded-lg hover:bg-green-600 transition duration-200 font-semibold"
+                                                    >
+                                                        <i className="fas fa-plus mr-2"></i>Add Transaction
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </form>
+                                    </div>
+
+                                    <div className="bg-white rounded-xl shadow-lg p-6 hover-lift">
+                                        <h3 className="text-lg font-semibold mb-4 text-gray-800">
+                                            <i className="fas fa-filter text-blue-500 mr-2"></i>
+                                            Filters
+                                        </h3>
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                    Transaction Type
+                                                </label>
+                                                <div className="flex gap-2 flex-wrap">
+                                                    {['all', 'revenue', 'expense'].map(f => (
+                                                        <button
+                                                            key={f}
+                                                            onClick={() => setFilter(f)}
+                                                            className={`px-3 py-2 rounded-lg capitalize text-sm ${
+                                                                filter === f
+                                                                    ? 'bg-blue-500 text-white'
+                                                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                            }`}
+                                                        >
+                                                            {f}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                    Time Range
+                                                </label>
+                                                <div className="flex gap-2 flex-wrap">
+                                                    {['all', 'month', 'week'].map(t => (
+                                                        <button
+                                                            key={t}
+                                                            onClick={() => setTimeRange(t)}
+                                                            className={`px-3 py-2 rounded-lg capitalize text-sm ${
+                                                                timeRange === t
+                                                                    ? 'bg-purple-500 text-white'
+                                                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                            }`}
+                                                        >
+                                                            {t}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="lg:col-span-2 space-y-6">
+                                    <div className="bg-white rounded-xl shadow-lg p-6 hover-lift">
+                                        <h3 className="text-lg font-semibold mb-4 text-gray-800">
+                                            <i className="fas fa-chart-bar text-purple-500 mr-2"></i>
+                                            Financial Overview
+                                        </h3>
+                                        <div className="chart-container">
+                                            <canvas ref={financialChartRef}></canvas>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-white rounded-xl shadow-lg p-6 hover-lift">
+                                        <h3 className="text-lg font-semibold mb-4 text-gray-800">
+                                            <i className="fas fa-chart-pie text-orange-500 mr-2"></i>
+                                            Category Breakdown
+                                        </h3>
+                                        <div className="chart-container">
+                                            <canvas ref={categoryChartRef}></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'analytics' && (
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                <div className="bg-white rounded-xl shadow-lg p-6 hover-lift">
+                                    <h3 className="text-lg font-semibold mb-4 text-gray-800">
+                                        <i className="fas fa-chart-line text-blue-500 mr-2"></i>
+                                        Monthly Trends
+                                    </h3>
+                                    <div className="chart-container">
+                                        <canvas ref={trendChartRef}></canvas>
+                                    </div>
+                                </div>
+
+                                <div className="bg-white rounded-xl shadow-lg p-6 hover-lift">
+                                    <h3 className="text-lg font-semibold mb-4 text-gray-800">
+                                        <i className="fas fa-money-bill-wave text-green-500 mr-2"></i>
+                                        Monthly Cash Flow
+                                    </h3>
+                                    <div className="chart-container">
+                                        <canvas ref={cashFlowChartRef}></canvas>
+                                    </div>
+                                </div>
+
+                                <div className="bg-white rounded-xl shadow-lg p-6 hover-lift">
+                                    <h3 className="text-lg font-semibold mb-4 text-gray-800">
+                                        <i className="fas fa-tachometer-alt text-purple-500 mr-2"></i>
+                                        Financial Health
+                                    </h3>
+                                    <div className="flex justify-around items-center">
+                                        <div className="text-center">
+                                            <ProgressRing 
+                                                value={profitMargin > 0 ? profitMargin : 0} 
+                                                max={50} 
+                                                color="#10b981" 
+                                            />
+                                            <p className="mt-2 text-sm font-medium">Profit Margin</p>
+                                        </div>
+                                        <div className="text-center">
+                                            <ProgressRing 
+                                                value={revenue > 0 ? (expenses / revenue) * 100 : 0} 
+                                                max={100} 
+                                                color="#ef4444" 
+                                            />
+                                            <p className="mt-2 text-sm font-medium">Expense Ratio</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-white rounded-xl shadow-lg p-6 hover-lift">
+                                    <h3 className="text-lg font-semibold mb-4 text-gray-800">
+                                        <i className="fas fa-table text-orange-500 mr-2"></i>
+                                        Category Details
+                                    </h3>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full">
+                                            <thead>
+                                                <tr className="border-b">
+                                                    <th className="text-left py-2">Category</th>
+                                                    <th className="text-right py-2">Amount</th>
+                                                    <th className="text-right py-2">Percentage</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {Object.entries(categoryBreakdown()).map(([cat, total]) => {
+                                                    const percentage = revenue > 0 ? (total / revenue) * 100 : 0;
+                                                    return (
+                                                        <tr key={cat} className="border-b border-gray-100">
+                                                            <td className="py-2">{cat}</td>
+                                                            <td className={`text-right font-medium ${
+                                                                revenueCategories.includes(cat) ? 'text-green-600' : 'text-red-600'
+                                                            }`}>
+                                                                {formatCurrency(total)}
+                                                            </td>
+                                                            <td className="text-right text-gray-600">
+                                                                {percentage.toFixed(1)}%
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'transactions' && (
+                            <div className="bg-white rounded-xl shadow-lg p-6 hover-lift">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h2 className="text-xl font-semibold text-gray-800">
+                                        <i className="fas fa-list text-blue-500 mr-2"></i>
+                                        Transactions ({filteredTransactions.length})
+                                    </h2>
+                                    <div className="text-sm text-gray-600">
+                                        Showing: {filter === 'all' ? 'All' : filter} • {timeRange === 'all' ? 'All time' : `This ${timeRange}`}
+                                    </div>
+                                </div>
+
+                                {filteredTransactions.length === 0 ? (
+                                    <div className="text-center py-8 text-gray-500">
+                                        <i className="fas fa-receipt text-4xl mb-4 text-gray-300"></i>
+                                        <p>No transactions found. Add your first transaction above!</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3 max-h-96 overflow-y-auto">
+                                        {filteredTransactions.map(transaction => (
+                                            <div key={transaction.id} className="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition duration-200 fade-in">
+                                                <div className="flex justify-between items-start">
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center gap-3 mb-1">
+                                                            <span className={`inline-block w-3 h-3 rounded-full ${
+                                                                transaction.type === 'revenue' ? 'bg-green-500' : 'bg-red-500'
+                                                            }`}></span>
+                                                            <span className="font-semibold text-gray-800">
+                                                                {transaction.description}
+                                                            </span>
+                                                            <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                                                {transaction.category}
+                                                            </span>
+                                                        </div>
+                                                        <div className="text-sm text-gray-600 ml-6">
+                                                            {new Date(transaction.date).toLocaleDateString()} • 
+                                                            {transaction.type === 'revenue' ? ' Revenue' : ' Expense'}
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className={`font-bold ${
+                                                            transaction.type === 'revenue' ? 'text-green-600' : 'text-red-600'
+                                                        }`}>
+                                                            {transaction.type === 'revenue' ? '+' : '-'}{formatCurrency(transaction.amount)}
+                                                        </span>
+                                                        <div className="flex gap-1">
+                                                            <button
+                                                                onClick={() => startEditing(transaction)}
+                                                                className="p-1 text-blue-500 hover:bg-blue-50 rounded transition duration-200"
+                                                                title="Edit transaction"
+                                                            >
+                                                                <i className="fas fa-edit"></i>
+                                                            </button>
+                                                            <button
+                                                                onClick={() => deleteTransaction(transaction.id)}
+                                                                className="p-1 text-red-500 hover:bg-red-50 rounded transition duration-200"
+                                                                title="Delete transaction"
+                                                            >
+                                                                <i className="fas fa-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        <div className="text-center mt-8 text-gray-500 text-sm">
+                            <p>All data is stored in memory during your session 💰</p>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<AccountingApp />, document.getElementById('root'));
