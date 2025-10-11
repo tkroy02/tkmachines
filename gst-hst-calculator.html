@@ -73,6 +73,38 @@
             margin: 0 auto;
         }
 
+        .sync-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .sync-indicator.synced .dot {
+            background: var(--success);
+        }
+
+        .sync-indicator.syncing .dot {
+            background: var(--warning);
+            animation: pulse 1s infinite;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--gray);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
         .dashboard {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -178,6 +210,11 @@
         .btn:hover {
             transform: translateY(-3px);
             box-shadow: 0 7px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
         .btn-revenue {
@@ -385,12 +422,6 @@
             background: linear-gradient(90deg, var(--net), #7209b7);
         }
 
-        .chart-container {
-            height: 200px;
-            margin: 20px 0;
-            position: relative;
-        }
-
         .actions {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -433,33 +464,6 @@
 
         .notification i {
             font-size: 1.5rem;
-        }
-
-        .tabs {
-            display: flex;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        .tab {
-            padding: 12px 25px;
-            cursor: pointer;
-            font-weight: 600;
-            border-bottom: 3px solid transparent;
-            transition: var(--transition);
-        }
-
-        .tab.active {
-            color: var(--primary);
-            border-bottom: 3px solid var(--primary);
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
         }
 
         .category-tag {
@@ -534,6 +538,10 @@
         <div class="header">
             <h1><i class="fas fa-calculator"></i> TaxMaster Pro</h1>
             <p>Complete GST/HST Management with Expense Tracking</p>
+            <div class="sync-indicator synced" id="syncIndicator">
+                <div class="dot"></div>
+                <span id="syncText">Cloud Synced</span>
+            </div>
         </div>
 
         <!-- Financial Summary -->
@@ -724,55 +732,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Submission History Card -->
-        <div class="card">
-            <h2><i class="fas fa-archive"></i> Financial Overview</h2>
-            <div class="tabs">
-                <div class="tab active" onclick="switchTab('submissions')">Tax Submissions</div>
-                <div class="tab" onclick="switchTab('analytics')">Analytics</div>
-                <div class="tab" onclick="switchTab('categories')">Expense Categories</div>
-            </div>
-            
-            <div class="tab-content active" id="submissions">
-                <div id="submissionHistory">
-                    <div class="empty-state">
-                        <i class="fas fa-inbox"></i>
-                        <h3>No Tax Submissions</h3>
-                        <p>Submit your first tax payment to see history here</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="tab-content" id="analytics">
-                <div class="chart-container">
-                    <canvas id="taxChart"></canvas>
-                </div>
-                <div class="financial-summary">
-                    <div class="summary-card">
-                        <div><i class="fas fa-money-bill-wave"></i> Total Submitted</div>
-                        <div class="summary-value positive" id="totalSubmitted">$0.00</div>
-                    </div>
-                    <div class="summary-card">
-                        <div><i class="fas fa-calendar-check"></i> Submission Count</div>
-                        <div class="summary-value" id="submissionCount">0</div>
-                    </div>
-                    <div class="summary-card">
-                        <div><i class="fas fa-receipt"></i> Expense Tax Credits</div>
-                        <div class="summary-value tax-credit" id="totalTaxCredits">$0.00</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="tab-content" id="categories">
-                <div class="chart-container">
-                    <canvas id="categoryChart"></canvas>
-                </div>
-                <div id="categoryBreakdown">
-                    <!-- Category breakdown will be populated here -->
-                </div>
-            </div>
-        </div>
     </div>
 
     <div class="floating-btn" onclick="showQuickReport()">
@@ -787,53 +746,146 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-analytics.js"></script>
+
     <script>
-        // Initialize data storage
-        let revenues = JSON.parse(localStorage.getItem('gstRevenues')) || [];
-        let expenses = JSON.parse(localStorage.getItem('gstExpenses')) || [];
-        let submissions = JSON.parse(localStorage.getItem('gstSubmissions')) || [];
-        let taxChart, categoryChart;
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBcuCuqYrySz26d7CoQXZllePzMq3LEyWE",
+            authDomain: "tkmachines-945b9.firebaseapp.com",
+            projectId: "tkmachines-945b9",
+            storageBucket: "tkmachines-945b9.firebasestorage.app",
+            messagingSenderId: "137087394703",
+            appId: "1:137087394703:web:81c3383fd6ee961ef3e1fa",
+            measurementId: "G-Y8GH34Q2FN"
+        };
 
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+        const analytics = firebase.getAnalytics(app);
 
-        // DOM elements
-        const taxRateSelect = document.getElementById('taxRate');
-        const customRateContainer = document.getElementById('customRateContainer');
-        const expenseTaxRateSelect = document.getElementById('expenseTaxRate');
-        const customExpenseRateContainer = document.getElementById('customExpenseRateContainer');
-        const revenueList = document.getElementById('revenueList');
-        const expenseList = document.getElementById('expenseList');
-        const revenueActions = document.getElementById('revenueActions');
-        const expenseActions = document.getElementById('expenseActions');
-        const notification = document.getElementById('notification');
+        // Data storage
+        let revenues = [];
+        let expenses = [];
+        let submissions = [];
+        let currentUser = null;
 
-        // Event listeners
-        taxRateSelect.addEventListener('change', function() {
-            customRateContainer.style.display = this.value === 'custom' ? 'block' : 'none';
+        // AUTHENTICATION CHECK - Single instance
+        auth.onAuthStateChanged((user) => {
+            currentUser = user;
+            
+            if (!user) {
+                // User is not logged in, redirect to login page
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            // User is authenticated, initialize app
+            initializeApp();
         });
 
-        expenseTaxRateSelect.addEventListener('change', function() {
-            customExpenseRateContainer.style.display = this.value === 'custom-expense' ? 'block' : 'none';
-        });
+        function initializeApp() {
+            // Set default dates
+            document.getElementById('revenueDate').valueAsDate = new Date();
+            document.getElementById('expenseDate').valueAsDate = new Date();
 
-        // Set default dates to today
-        document.getElementById('revenueDate').valueAsDate = new Date();
-        document.getElementById('expenseDate').valueAsDate = new Date();
+            // Load user data from Firebase
+            loadUserData();
 
-        // Initialize the display
-        updateDisplay();
-        initCharts();
+            // Setup event listeners
+            document.getElementById('taxRate').addEventListener('change', function() {
+                document.getElementById('customRateContainer').style.display = this.value === 'custom' ? 'block' : 'none';
+            });
+
+            document.getElementById('expenseTaxRate').addEventListener('change', function() {
+                document.getElementById('customExpenseRateContainer').style.display = this.value === 'custom-expense' ? 'block' : 'none';
+            });
+        }
+
+        function loadUserData() {
+            updateSyncStatus('syncing');
+            const userId = currentUser.uid;
+            
+            // Load revenues
+            db.ref(`users/${userId}/revenues`).on('value', (snapshot) => {
+                revenues = snapshot.val() ? Object.values(snapshot.val()) : [];
+                updateDisplay();
+                updateSyncStatus('synced');
+            });
+
+            // Load expenses
+            db.ref(`users/${userId}/expenses`).on('value', (snapshot) => {
+                expenses = snapshot.val() ? Object.values(snapshot.val()) : [];
+                updateDisplay();
+                updateSyncStatus('synced');
+            });
+
+            // Load submissions
+            db.ref(`users/${userId}/submissions`).on('value', (snapshot) => {
+                submissions = snapshot.val() ? Object.values(snapshot.val()) : [];
+                updateDisplay();
+                updateSyncStatus('synced');
+            });
+        }
+
+        function updateSyncStatus(status) {
+            const indicator = document.getElementById('syncIndicator');
+            const text = document.getElementById('syncText');
+            
+            indicator.classList.remove('syncing', 'synced');
+            if (status === 'syncing') {
+                indicator.classList.add('syncing');
+                text.textContent = 'Syncing...';
+            } else {
+                indicator.classList.add('synced');
+                text.textContent = 'Cloud Synced';
+            }
+        }
+
+        function saveData() {
+            if (!currentUser) return;
+            
+            updateSyncStatus('syncing');
+            const userId = currentUser.uid;
+            
+            const updates = {};
+            updates[`users/${userId}/revenues`] = revenues.reduce((acc, rev) => {
+                acc[rev.id] = rev;
+                return acc;
+            }, {});
+            updates[`users/${userId}/expenses`] = expenses.reduce((acc, exp) => {
+                acc[exp.id] = exp;
+                return acc;
+            }, {});
+            updates[`users/${userId}/submissions`] = submissions.reduce((acc, sub) => {
+                acc[sub.id] = sub;
+                return acc;
+            }, {});
+
+            db.ref().update(updates).then(() => {
+                updateSyncStatus('synced');
+            }).catch(err => {
+                console.error('Sync error:', err);
+                updateSyncStatus('synced');
+            });
+        }
 
         function getTaxRate(isExpense = false) {
             if (isExpense) {
-                const selectedRate = expenseTaxRateSelect.value;
+                const selectedRate = document.getElementById('expenseTaxRate').value;
                 if (selectedRate === 'custom-expense') {
                     const customRate = parseFloat(document.getElementById('customExpenseTaxRate').value) || 0;
                     return customRate / 100;
                 }
                 return parseFloat(selectedRate);
             } else {
-                const selectedRate = taxRateSelect.value;
+                const selectedRate = document.getElementById('taxRate').value;
                 if (selectedRate === 'custom') {
                     const customRate = parseFloat(document.getElementById('customTaxRate').value) || 0;
                     return customRate / 100;
@@ -857,7 +909,7 @@
             const totalAmount = amount + taxAmount;
 
             const revenue = {
-                id: Date.now(),
+                id: Date.now().toString(),
                 date: date,
                 description: description,
                 amount: amount,
@@ -870,7 +922,8 @@
             revenues.push(revenue);
             saveData();
             updateDisplay();
-            clearRevenueForm();
+            document.getElementById('revenueDescription').value = '';
+            document.getElementById('revenueAmount').value = '';
             showNotification('Revenue entry added successfully!');
         }
 
@@ -888,10 +941,10 @@
 
             const taxAmount = amount * taxRate;
             const totalAmount = amount + taxAmount;
-            const taxCredit = taxAmount; // For expenses, tax paid is a credit
+            const taxCredit = taxAmount;
 
             const expense = {
-                id: Date.now(),
+                id: Date.now().toString(),
                 date: date,
                 description: description,
                 amount: amount,
@@ -906,7 +959,8 @@
             expenses.push(expense);
             saveData();
             updateDisplay();
-            clearExpenseForm();
+            document.getElementById('expenseDescription').value = '';
+            document.getElementById('expenseAmount').value = '';
             showNotification('Expense entry added successfully!');
         }
 
@@ -926,7 +980,6 @@
 
         function clearAllRevenue() {
             if (revenues.length === 0) return;
-            
             if (confirm('Are you sure you want to delete all revenue entries? This action cannot be undone.')) {
                 revenues = [];
                 saveData();
@@ -937,7 +990,6 @@
 
         function clearAllExpenses() {
             if (expenses.length === 0) return;
-            
             if (confirm('Are you sure you want to delete all expense entries? This action cannot be undone.')) {
                 expenses = [];
                 saveData();
@@ -955,7 +1007,7 @@
             }
 
             const submission = {
-                id: Date.now(),
+                id: Date.now().toString(),
                 date: new Date().toISOString().split('T')[0],
                 amount: netTax,
                 revenueCount: revenues.length,
@@ -968,11 +1020,10 @@
             submissions.unshift(submission);
             saveData();
             updateDisplay();
-            updateCharts();
 
             const message = netTax >= 0 ? 
-                `Tax payment of $${netTax.toFixed(2)} submitted successfully!` :
-                `Tax refund of $${Math.abs(netTax).toFixed(2)} processed successfully!`;
+                `Tax payment of ${netTax.toFixed(2)} submitted successfully!` :
+                `Tax refund of ${Math.abs(netTax).toFixed(2)} processed successfully!`;
                 
             showNotification(message);
         }
@@ -1005,11 +1056,13 @@
             updateRevenueList();
             updateExpenseList();
             updateFinancialSummary();
-            updateSubmissionHistory();
             updateProgressBars();
         }
 
         function updateRevenueList() {
+            const revenueList = document.getElementById('revenueList');
+            const revenueActions = document.getElementById('revenueActions');
+            
             if (revenues.length === 0) {
                 revenueList.innerHTML = `
                     <div class="empty-state">
@@ -1032,10 +1085,10 @@
                         </div>
                     </div>
                     <div style="text-align: right;">
-                        <div class="transaction-amount">$${revenue.amount.toFixed(2)}</div>
-                        <div class="revenue-tax">Tax: $${revenue.taxAmount.toFixed(2)}</div>
+                        <div class="transaction-amount">${revenue.amount.toFixed(2)}</div>
+                        <div class="revenue-tax">Tax: ${revenue.taxAmount.toFixed(2)}</div>
                     </div>
-                    <button class="delete-btn" onclick="deleteRevenue(${revenue.id})">
+                    <button class="delete-btn" onclick="deleteRevenue('${revenue.id}')">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
@@ -1043,6 +1096,9 @@
         }
 
         function updateExpenseList() {
+            const expenseList = document.getElementById('expenseList');
+            const expenseActions = document.getElementById('expenseActions');
+            
             if (expenses.length === 0) {
                 expenseList.innerHTML = `
                     <div class="empty-state">
@@ -1066,10 +1122,10 @@
                         </div>
                     </div>
                     <div style="text-align: right;">
-                        <div class="transaction-amount">$${expense.amount.toFixed(2)}</div>
-                        ${expense.taxCredit > 0 ? `<div class="expense-tax tax-credit">Credit: $${expense.taxCredit.toFixed(2)}</div>` : ''}
+                        <div class="transaction-amount">${expense.amount.toFixed(2)}</div>
+                        ${expense.taxCredit > 0 ? `<div class="expense-tax tax-credit">Credit: ${expense.taxCredit.toFixed(2)}</div>` : ''}
                     </div>
-                    <button class="delete-btn" onclick="deleteExpense(${expense.id})">
+                    <button class="delete-btn" onclick="deleteExpense('${expense.id}')">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
@@ -1096,13 +1152,10 @@
             const netIncome = calculateNetIncome();
             const netTax = calculateNetTax();
 
-            document.getElementById('totalRevenue').textContent = `$${totalRevenue.toFixed(2)}`;
-            document.getElementById('totalExpenses').textContent = `$${totalExpenses.toFixed(2)}`;
-            document.getElementById('netIncome').textContent = `$${netIncome.toFixed(2)}`;
-            document.getElementById('totalTax').textContent = `$${netTax.toFixed(2)}`;
-
-            // Update analytics tab
-            document.getElementById('totalTaxCredits').textContent = `$${calculateExpenseTaxCredits().toFixed(2)}`;
+            document.getElementById('totalRevenue').textContent = `${totalRevenue.toFixed(2)}`;
+            document.getElementById('totalExpenses').textContent = `${totalExpenses.toFixed(2)}`;
+            document.getElementById('netIncome').textContent = `${netIncome.toFixed(2)}`;
+            document.getElementById('totalTax').textContent = `${netTax.toFixed(2)}`;
         }
 
         function updateProgressBars() {
@@ -1110,7 +1163,6 @@
             const totalExpenses = calculateTotalExpenses();
             const netIncome = calculateNetIncome();
             
-            // Simple progress indicators (not based on goals, just visual representation)
             const revenueProgress = Math.min((totalRevenue / 10000) * 100, 100);
             const expenseProgress = Math.min((totalExpenses / 5000) * 100, 100);
             const netProgress = Math.min((Math.max(netIncome, 0) / 5000) * 100, 100);
@@ -1122,57 +1174,6 @@
             document.getElementById('revenueProgressPercent').textContent = `${Math.round(revenueProgress)}%`;
             document.getElementById('expenseProgressPercent').textContent = `${Math.round(expenseProgress)}%`;
             document.getElementById('netProgressPercent').textContent = `${Math.round(netProgress)}%`;
-        }
-
-        function updateSubmissionHistory() {
-            if (submissions.length === 0) {
-                document.getElementById('submissionHistory').innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-inbox"></i>
-                        <h3>No Tax Submissions</h3>
-                        <p>Submit your first tax payment to see history here</p>
-                    </div>`;
-                return;
-            }
-
-            document.getElementById('submissionHistory').innerHTML = submissions.map(submission => `
-                <div class="transaction-item">
-                    <div class="transaction-info">
-                        <strong>Tax Submission #${submission.id.toString().slice(-4)}</strong>
-                        <div class="transaction-meta">
-                            <span><i class="far fa-calendar"></i> ${submission.date}</span>
-                            <span><i class="fas fa-receipt"></i> ${submission.revenueCount} revenue entries</span>
-                            <span><i class="fas fa-file-invoice-dollar"></i> ${submission.expenseCount} expense entries</span>
-                        </div>
-                    </div>
-                    <div class="transaction-amount ${submission.amount >= 0 ? 'revenue-amount' : 'expense-amount'}">
-                        ${submission.amount >= 0 ? 'Paid: ' : 'Refund: '}$${Math.abs(submission.amount).toFixed(2)}
-                    </div>
-                </div>
-            `).join('');
-            
-            // Update analytics
-            const totalSubmitted = submissions.reduce((total, sub) => total + (sub.amount > 0 ? sub.amount : 0), 0);
-            document.getElementById('totalSubmitted').textContent = `$${totalSubmitted.toFixed(2)}`;
-            document.getElementById('submissionCount').textContent = submissions.length;
-        }
-
-        function clearRevenueForm() {
-            document.getElementById('revenueDescription').value = '';
-            document.getElementById('revenueAmount').value = '';
-            document.getElementById('revenueDate').valueAsDate = new Date();
-        }
-
-        function clearExpenseForm() {
-            document.getElementById('expenseDescription').value = '';
-            document.getElementById('expenseAmount').value = '';
-            document.getElementById('expenseDate').valueAsDate = new Date();
-        }
-
-        function saveData() {
-            localStorage.setItem('gstRevenues', JSON.stringify(revenues));
-            localStorage.setItem('gstExpenses', JSON.stringify(expenses));
-            localStorage.setItem('gstSubmissions', JSON.stringify(submissions));
         }
 
         function exportData() {
@@ -1196,7 +1197,7 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `taxmaster-complete-data-${new Date().toISOString().split('T')[0]}.json`;
+            a.download = `taxmaster-data-${new Date().toISOString().split('T')[0]}.json`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -1212,7 +1213,6 @@
             
             messageEl.textContent = message;
             
-            // Update icon and color based on type
             if (type === 'error') {
                 icon.className = 'fas fa-exclamation-circle';
                 notification.style.borderLeftColor = 'var(--danger)';
@@ -1234,145 +1234,6 @@
             }, 4000);
         }
 
-        function switchTab(tabName) {
-            // Update tabs
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            
-            // Update content
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            document.getElementById(tabName).classList.add('active');
-            
-            if (tabName === 'analytics') {
-                updateCharts();
-            } else if (tabName === 'categories') {
-                updateCategoryChart();
-                updateCategoryBreakdown();
-            }
-        }
-
-        function initCharts() {
-            const ctx = document.getElementById('taxChart').getContext('2d');
-            taxChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: 'Tax Amount',
-                        data: [],
-                        backgroundColor: 'rgba(67, 97, 238, 0.7)',
-                        borderColor: 'rgba(67, 97, 238, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return '$' + value;
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-
-            const ctx2 = document.getElementById('categoryChart').getContext('2d');
-            categoryChart = new Chart(ctx2, {
-                type: 'doughnut',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        data: [],
-                        backgroundColor: [
-                            '#4361ee', '#7209b7', '#f72585', '#4cc9f0',
-                            '#f8961e', '#38b000', '#4895ef', '#3a0ca3'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                }
-            });
-        }
-
-        function updateCharts() {
-            if (!taxChart) return;
-            
-            // Get last 6 submissions for the chart
-            const recentSubmissions = submissions.slice(0, 6).reverse();
-            
-            taxChart.data.labels = recentSubmissions.map(sub => 
-                new Date(sub.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-            );
-            taxChart.data.datasets[0].data = recentSubmissions.map(sub => Math.abs(sub.amount));
-            taxChart.update();
-        }
-
-        function updateCategoryChart() {
-            if (!categoryChart) return;
-            
-            // Calculate expenses by category
-            const categories = {};
-            expenses.forEach(expense => {
-                if (!categories[expense.category]) {
-                    categories[expense.category] = 0;
-                }
-                categories[expense.category] += expense.amount;
-            });
-            
-            categoryChart.data.labels = Object.keys(categories).map(getCategoryName);
-            categoryChart.data.datasets[0].data = Object.values(categories);
-            categoryChart.update();
-        }
-
-        function updateCategoryBreakdown() {
-            const categories = {};
-            expenses.forEach(expense => {
-                if (!categories[expense.category]) {
-                    categories[expense.category] = {
-                        count: 0,
-                        total: 0,
-                        taxCredits: 0
-                    };
-                }
-                categories[expense.category].count++;
-                categories[expense.category].total += expense.amount;
-                categories[expense.category].taxCredits += expense.taxCredit;
-            });
-            
-            const breakdownEl = document.getElementById('categoryBreakdown');
-            if (Object.keys(categories).length === 0) {
-                breakdownEl.innerHTML = '<div class="empty-state"><i class="fas fa-folder-open"></i><h3>No Expenses by Category</h3><p>Add expenses to see category breakdown</p></div>';
-                return;
-            }
-            
-            breakdownEl.innerHTML = Object.entries(categories).map(([category, data]) => `
-                <div class="transaction-item">
-                    <div class="transaction-info">
-                        <strong>${getCategoryName(category)}</strong>
-                        <div class="transaction-meta">
-                            <span>${data.count} entries</span>
-                        </div>
-                    </div>
-                    <div style="text-align: right;">
-                        <div class="transaction-amount">$${data.total.toFixed(2)}</div>
-                        ${data.taxCredits > 0 ? `<div class="tax-credit">Credits: $${data.taxCredits.toFixed(2)}</div>` : ''}
-                    </div>
-                </div>
-            `).join('');
-        }
-
         function showQuickReport() {
             const totalRevenue = calculateTotalRevenue();
             const totalExpenses = calculateTotalExpenses();
@@ -1382,13 +1243,14 @@
             const report = `
 TAXMASTER QUICK REPORT
 =======================
-Total Revenue: $${totalRevenue.toFixed(2)}
-Total Expenses: $${totalExpenses.toFixed(2)}
-Net Income: $${netIncome.toFixed(2)}
-Net Tax: $${netTax.toFixed(2)}
+Total Revenue: ${totalRevenue.toFixed(2)}
+Total Expenses: ${totalExpenses.toFixed(2)}
+Net Income: ${netIncome.toFixed(2)}
+Net Tax: ${netTax.toFixed(2)}
 Revenue Entries: ${revenues.length}
 Expense Entries: ${expenses.length}
 Tax Submissions: ${submissions.length}
+Data Source: Cloud Synced
 Generated: ${new Date().toLocaleDateString()}
             `;
             
