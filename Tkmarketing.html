@@ -33,6 +33,17 @@
             transform-origin: 50% 50%;
         }
     </style>
+    <div id="header"></div>
+
+<script>
+  fetch('header.html')
+    .then(res => res.text())
+    .then(html => {
+      document.getElementById('header').innerHTML = html;
+    })
+    .catch(err => console.error('Header load error:', err));
+</script>
+
 </head>
 <body class="bg-gray-50 min-h-screen">
     <div id="app" class="py-8 px-4">
