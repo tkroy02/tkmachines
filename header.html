@@ -63,14 +63,13 @@
   }
 
   .header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 20px;
-    max-width: 1400px;
-    margin: 0 auto;
-  }
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 30px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
 
   .tk-header .logo {
     display: flex;
@@ -99,13 +98,12 @@
   }
 
   .tk-header nav.menu {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
-    justify-content: center;
-    flex: 1;
-    max-width: 600px;
-  }
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+  /* Remove flex: 1 and max-width constraints */
+}
 
   .tk-header nav.menu a {
     color: white;
