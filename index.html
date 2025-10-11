@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TK Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    /* Reset and base styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Roboto', sans-serif;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background: #f4f7f9;
+      color: #333;
+    }
+
+    /* Header */
+    header {
+      background-color: #0d6efd;
+      color: white;
+      padding: 20px 40px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    header h1 {
+      font-size: 2rem;
+      margin-bottom: 5px;
+    }
+
+    header p {
+      font-size: 1rem;
+      opacity: 0.9;
+    }
+
+    /* Navigation */
+    nav {
+      margin: 40px auto;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 30px;
+    }
+
+    nav a {
+      background-color: #ffffff;
+      padding: 20px 40px;
+      text-decoration: none;
+      color: #0d6efd;
+      font-size: 1.2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+    }
+
+    nav a:hover {
+      background-color: #0d6efd;
+      color: white;
+      transform: translateY(-5px);
+      box-shadow: 0 6px 10px rgba(0,0,0,0.15);
+    }
+
+    /* Footer */
+    footer {
+      margin-top: auto;
+      background-color: #0d6efd;
+      color: white;
+      text-align: center;
+      padding: 15px 20px;
+    }
+
+    footer p {
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      nav a {
+        width: 80%;
+        text-align: center;
+        padding: 15px 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>TK Dashboard</h1>
+    <p>Access all your TK tools easily</p>
+  </header>
+
+  <nav>
+    <a href="Tkmarketing.html">Tk Marketing</a>
+    <a href="Tkchats.html">Tk Chats</a>
+    <a href="Tktask_manager.html">Tk Task Manager</a>
+    <a href="Tkaccounting_manager.html">TK Accounting Manager</a>
+  </nav>
+
+  <footer>
+    <p>&copy; 2025 TK Dashboard. All rights reserved.</p>
+  </footer>
+</body>
+</html>
