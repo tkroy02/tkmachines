@@ -3,294 +3,1011 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modern Accounting Manager</title>
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <title>Marketing Campaign Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        .fade-in { animation: fadeIn 0.3s ease-in; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-        .positive { color: #10b981; }
-        .negative { color: #ef4444; }
         .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
         .glass-effect { 
             backdrop-filter: blur(10px);
             background: rgba(255, 255, 255, 0.7);
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
-        .chart-container { position: relative; height: 300px; }
-        .progress-ring {
-            transform: rotate(-90deg);
-        }
-        .progress-ring-circle {
-            transition: stroke-dashoffset 0.5s ease;
-            transform-origin: 50% 50%;
-        }
         .hover-lift { transition: all 0.3s ease; }
         .hover-lift:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .fade-in { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .chart-container { position: relative; height: 300px; }
+        .status-badge { 
+            padding: 4px 12px; 
+            border-radius: 20px; 
+            font-size: 0.75rem; 
+            font-weight: 600; 
+        }
+        .kpi-trend { font-size: 0.875rem; margin-top: 4px; }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
-    <div id="root"></div>
+<body class="bg-gradient-to-br from-blue-50 to-purple-50 min-h-screen">
+    <div id="app" class="py-8 px-4">
+        <div class="max-w-7xl mx-auto">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold text-gray-800 mb-2">
+                    <i class="fas fa-rocket text-purple-500 mr-3"></i>
+                    Marketing Campaign Tracker
+                </h1>
+                <p class="text-gray-600">Monitor performance, calculate ROI, and optimize your marketing budget</p>
+            </div>
 
-    <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+            <!-- Navigation Tabs -->
+            <div class="flex justify-center mb-8">
+                <div class="glass-effect rounded-xl p-1 flex">
+                    <button id="overview-tab" class="px-6 py-3 rounded-lg capitalize font-medium transition-all duration-300 bg-white text-purple-600 shadow-md">
+                        <i class="fas fa-home mr-2"></i>Overview
+                    </button>
+                    <button id="campaigns-tab" class="px-6 py-3 rounded-lg capitalize font-medium transition-all duration-300 text-gray-600 hover:text-purple-500">
+                        <i class="fas fa-chart-line mr-2"></i>Campaigns
+                    </button>
+                    <button id="analytics-tab" class="px-6 py-3 rounded-lg capitalize font-medium transition-all duration-300 text-gray-600 hover:text-purple-500">
+                        <i class="fas fa-chart-bar mr-2"></i>Analytics
+                    </button>
+                    <button id="budget-tab" class="px-6 py-3 rounded-lg capitalize font-medium transition-all duration-300 text-gray-600 hover:text-purple-500">
+                        <i class="fas fa-money-bill-wave mr-2"></i>Budget
+                    </button>
+                </div>
+            </div>
 
-        function AccountingApp() {
-            // State for transactions
-            const [transactions, setTransactions] = useState([]);
-            const [description, setDescription] = useState('');
-            const [amount, setAmount] = useState('');
-            const [type, setType] = useState('revenue'); // revenue or expense
-            const [category, setCategory] = useState('');
-            const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+            <!-- KPI Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                <div class="bg-white rounded-xl shadow-lg p-6 text-center hover-lift">
+                    <div class="text-2xl font-bold text-green-600" id="total-roi">0%</div>
+                    <div class="text-sm text-gray-600">Weighted ROI</div>
+                    <div class="kpi-trend text-green-500" id="roi-trend">
+                        <i class="fas fa-arrow-up mr-1"></i> Consistent
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 text-center hover-lift">
+                    <div class="text-2xl font-bold text-blue-600" id="total-cac">$0.00</div>
+                    <div class="text-sm text-gray-600">Avg. Customer Cost</div>
+                    <div class="kpi-trend text-blue-500" id="cac-trend">
+                        <i class="fas fa-minus mr-1"></i> Stable
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 text-center hover-lift">
+                    <div class="text-2xl font-bold text-purple-600" id="total-revenue">$0.00</div>
+                    <div class="text-sm text-gray-600">Total Revenue</div>
+                    <div class="kpi-trend text-purple-500" id="revenue-trend">
+                        <i class="fas fa-chart-line mr-1"></i> Tracked
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 text-center hover-lift">
+                    <div class="text-2xl font-bold text-orange-600" id="total-budget">$0.00</div>
+                    <div class="text-sm text-gray-600">Total Spent</div>
+                    <div class="kpi-trend text-orange-500" id="budget-trend">
+                        <i class="fas fa-wallet mr-1"></i> Managed
+                    </div>
+                </div>
+            </div>
+
+            <!-- ROI Calculation Info -->
+            <div class="bg-blue-50 rounded-lg p-4 mb-6 text-sm text-blue-700 border border-blue-200">
+                <i class="fas fa-info-circle mr-2"></i>
+                <strong>ROI Calculation:</strong> Dashboard shows weighted ROI (total revenue ÷ total spend) while Analytics shows average campaign ROI. 
+                Both metrics provide valuable insights for different decision-making purposes.
+            </div>
+
+            <!-- Main Content Area -->
+            <div id="content-area">
+                <!-- Overview Tab Content -->
+                <div id="overview-content" class="space-y-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- ROI by Channel Chart -->
+                        <div class="bg-white rounded-xl shadow-lg p-6 hover-lift">
+                            <h3 class="text-lg font-semibold mb-4 text-gray-800">
+                                <i class="fas fa-chart-pie text-purple-500 mr-2"></i>
+                                ROI by Marketing Channel
+                            </h3>
+                            <div class="chart-container">
+                                <canvas id="roi-channel-chart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Budget Allocation Chart -->
+                        <div class="bg-white rounded-xl shadow-lg p-6 hover-lift">
+                            <h3 class="text-lg font-semibold mb-4 text-gray-800">
+                                <i class="fas fa-chart-bar text-blue-500 mr-2"></i>
+                                Budget Allocation
+                            </h3>
+                            <div class="chart-container">
+                                <canvas id="budget-allocation-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Campaigns -->
+                    <div class="bg-white rounded-xl shadow-lg p-6 hover-lift">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold text-gray-800">
+                                <i class="fas fa-list text-green-500 mr-2"></i>
+                                Recent Campaigns
+                            </h3>
+                            <span class="text-sm text-gray-500" id="recent-campaigns-count">0 campaigns</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="border-b">
+                                        <th class="text-left py-2">Campaign</th>
+                                        <th class="text-left py-2">Channel</th>
+                                        <th class="text-right py-2">Spend</th>
+                                        <th class="text-right py-2">Revenue</th>
+                                        <th class="text-right py-2">ROI</th>
+                                        <th class="text-right py-2">CAC</th>
+                                        <th class="text-center py-2">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recent-campaigns">
+                                    <!-- Campaign data will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Campaigns Tab Content -->
+                <div id="campaigns-content" class="hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <!-- Campaign Form -->
+                        <div class="lg:col-span-1 space-y-6">
+                            <div class="bg-white rounded-xl shadow-lg p-6 hover-lift">
+                                <h2 class="text-xl font-semibold mb-4 text-gray-800">
+                                    <i class="fas fa-plus-circle text-green-500 mr-2"></i>
+                                    <span id="form-title">Add New Campaign</span>
+                                </h2>
+                                <form id="campaign-form" class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                                            Campaign Name *
+                                        </label>
+                                        <input type="text" id="campaign-name" placeholder="e.g., Summer Sale 2023" 
+                                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" required>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                                            Marketing Channel *
+                                        </label>
+                                        <select id="campaign-channel" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" required>
+                                            <option value="">Select Channel</option>
+                                            <option value="Social Media">Social Media</option>
+                                            <option value="Email Marketing">Email Marketing</option>
+                                            <option value="PPC">PPC (Pay-Per-Click)</option>
+                                            <option value="SEO">SEO</option>
+                                            <option value="Content Marketing">Content Marketing</option>
+                                            <option value="Influencer">Influencer Marketing</option>
+                                            <option value="Affiliate">Affiliate Marketing</option>
+                                            <option value="Traditional">Traditional Media</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                                Start Date *
+                                            </label>
+                                            <input type="date" id="campaign-start" 
+                                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" required>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                                End Date
+                                            </label>
+                                            <input type="date" id="campaign-end" 
+                                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                                            Budget ($) *
+                                        </label>
+                                        <input type="number" step="0.01" id="campaign-budget" placeholder="0.00" 
+                                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" required>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                                            Revenue Generated ($)
+                                        </label>
+                                        <input type="number" step="0.01" id="campaign-revenue" placeholder="0.00" 
+                                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                                            New Customers Acquired
+                                        </label>
+                                        <input type="number" id="campaign-customers" placeholder="0" 
+                                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                                            Status
+                                        </label>
+                                        <select id="campaign-status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                                            <option value="Planning">Planning</option>
+                                            <option value="Active">Active</option>
+                                            <option value="Completed">Completed</option>
+                                            <option value="Paused">Paused</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="flex gap-2">
+                                        <button type="submit" id="submit-button" class="flex-1 bg-green-500 text-white py-3 px-4 rounded-lg hover:bg-green-600 transition duration-200 font-semibold">
+                                            <i class="fas fa-plus mr-2"></i>Add Campaign
+                                        </button>
+                                        <button type="button" id="cancel-edit" class="hidden bg-gray-500 text-white py-3 px-4 rounded-lg hover:bg-gray-600 transition duration-200 font-semibold">
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Campaign List -->
+                        <div class="lg:col-span-2">
+                            <div class="bg-white rounded-xl shadow-lg p-6 hover-lift">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h2 class="text-xl font-semibold text-gray-800">
+                                        <i class="fas fa-list text-blue-500 mr-2"></i>
+                                        All Campaigns
+                                    </h2>
+                                    <div class="text-sm text-gray-600">
+                                        Total: <span id="campaign-count">0</span> campaigns
+                                    </div>
+                                </div>
+
+                                <div class="space-y-4 max-h-[600px] overflow-y-auto" id="campaigns-list">
+                                    <!-- Campaign items will be populated here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics Tab Content -->
+                <div id="analytics-content" class="hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- ROI Trends -->
+                        <div class="bg-white rounded-xl shadow-lg p-6 hover-lift">
+                            <h3 class="text-lg font-semibold mb-4 text-gray-800">
+                                <i class="fas fa-chart-line text-green-500 mr-2"></i>
+                                ROI Trends (Last 6 Months)
+                            </h3>
+                            <div class="chart-container">
+                                <canvas id="roi-trends-chart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- CAC by Channel -->
+                        <div class="bg-white rounded-xl shadow-lg p-6 hover-lift">
+                            <h3 class="text-lg font-semibold mb-4 text-gray-800">
+                                <i class="fas fa-users text-blue-500 mr-2"></i>
+                                Customer Acquisition Cost by Channel
+                            </h3>
+                            <div class="chart-container">
+                                <canvas id="cac-channel-chart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Revenue vs Spend -->
+                        <div class="bg-white rounded-xl shadow-lg p-6 hover-lift">
+                            <h3 class="text-lg font-semibold mb-4 text-gray-800">
+                                <i class="fas fa-balance-scale text-purple-500 mr-2"></i>
+                                Revenue vs Marketing Spend
+                            </h3>
+                            <div class="chart-container">
+                                <canvas id="revenue-spend-chart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Channel Performance -->
+                        <div class="bg-white rounded-xl shadow-lg p-6 hover-lift">
+                            <h3 class="text-lg font-semibold mb-4 text-gray-800">
+                                <i class="fas fa-trophy text-orange-500 mr-2"></i>
+                                Channel Performance Score
+                            </h3>
+                            <div class="chart-container">
+                                <canvas id="channel-performance-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Campaign Performance Table -->
+                    <div class="bg-white rounded-xl shadow-lg p-6 hover-lift mt-6">
+                        <h3 class="text-lg font-semibold mb-4 text-gray-800">
+                            <i class="fas fa-table text-purple-500 mr-2"></i>
+                            Campaign Performance Details
+                        </h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="border-b">
+                                        <th class="text-left py-2">Campaign</th>
+                                        <th class="text-left py-2">Channel</th>
+                                        <th class="text-right py-2">Spend</th>
+                                        <th class="text-right py-2">Revenue</th>
+                                        <th class="text-right py-2">Customers</th>
+                                        <th class="text-right py-2">CAC</th>
+                                        <th class="text-right py-2">ROI</th>
+                                        <th class="text-center py-2">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="performance-table">
+                                    <!-- Performance data will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Budget Tab Content -->
+                <div id="budget-content" class="hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <!-- Budget Allocation Form -->
+                        <div class="lg:col-span-1 space-y-6">
+                            <div class="bg-white rounded-xl shadow-lg p-6 hover-lift">
+                                <h2 class="text-xl font-semibold mb-4 text-gray-800">
+                                    <i class="fas fa-money-bill-wave text-green-500 mr-2"></i>
+                                    Set Budget Allocation
+                                </h2>
+                                <form id="budget-form" class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                                            Total Marketing Budget ($) *
+                                        </label>
+                                        <input type="number" step="0.01" id="total-budget-input" placeholder="0.00" 
+                                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" required>
+                                    </div>
+
+                                    <div id="budget-allocation-inputs">
+                                        <!-- Budget allocation inputs will be generated here -->
+                                    </div>
+
+                                    <button type="submit" class="w-full bg-green-500 text-white py-3 px-4 rounded-lg hover:bg-green-600 transition duration-200 font-semibold">
+                                        <i class="fas fa-save mr-2"></i>Save Budget Allocation
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Budget Overview -->
+                        <div class="lg:col-span-2 space-y-6">
+                            <!-- Budget vs Actual -->
+                            <div class="bg-white rounded-xl shadow-lg p-6 hover-lift">
+                                <h3 class="text-lg font-semibold mb-4 text-gray-800">
+                                    <i class="fas fa-chart-bar text-purple-500 mr-2"></i>
+                                    Budget vs Actual Spend
+                                </h3>
+                                <div class="chart-container">
+                                    <canvas id="budget-vs-actual-chart"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- Budget Utilization -->
+                            <div class="bg-white rounded-xl shadow-lg p-6 hover-lift">
+                                <h3 class="text-lg font-semibold mb-4 text-gray-800">
+                                    <i class="fas fa-tachometer-alt text-orange-500 mr-2"></i>
+                                    Budget Utilization by Channel
+                                </h3>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="budget-utilization">
+                                    <!-- Budget utilization cards will be populated here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Enhanced Marketing Campaign Tracker Application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Application state
+            let appState = {
+                editingCampaignId: null,
+                charts: {}
+            };
+
+            // Initialize the application
+            initApp();
             
-            // State for filtering and views
-            const [filter, setFilter] = useState('all'); // all, revenue, expense
-            const [timeRange, setTimeRange] = useState('all'); // all, month, week
-            const [editingId, setEditingId] = useState(null);
-            const [editData, setEditData] = useState({});
-            const [activeTab, setActiveTab] = useState('overview'); // overview, analytics, transactions
-
-            // Chart references
-            const financialChartRef = useRef(null);
-            const categoryChartRef = useRef(null);
-            const trendChartRef = useRef(null);
-            const cashFlowChartRef = useRef(null);
-
-            // Categories
-            const revenueCategories = ['Sales', 'Services', 'Investments', 'Other Income'];
-            const expenseCategories = ['Supplies', 'Salaries', 'Rent', 'Utilities', 'Marketing', 'Travel', 'Equipment', 'Other Expenses'];
-
-            // Load transactions from localStorage
-            useEffect(() => {
-                const saved = localStorage.getItem('accounting-transactions');
-                if (saved) {
-                    setTransactions(JSON.parse(saved));
-                }
-            }, []);
-
-            // Save to localStorage when transactions change
-            useEffect(() => {
-                localStorage.setItem('accounting-transactions', JSON.stringify(transactions));
-            }, [transactions]);
-
-            // Initialize charts when data changes
-            useEffect(() => {
-                if (transactions.length > 0) {
-                    renderFinancialChart();
-                    renderCategoryChart();
-                    renderTrendChart();
-                    renderCashFlowChart();
-                }
-            }, [transactions, filter, timeRange]);
-
-            // Calculations
-            const calculateTotals = () => {
-                const filtered = filterTransactions();
-                const revenue = filtered
-                    .filter(t => t.type === 'revenue')
-                    .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+            function initApp() {
+                // Set up tab navigation
+                setupTabs();
                 
-                const expenses = filtered
-                    .filter(t => t.type === 'expense')
-                    .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+                // Initialize form handlers
+                setupForms();
                 
-                const profit = revenue - expenses;
-                const profitMargin = revenue > 0 ? (profit / revenue) * 100 : 0;
-
-                return { revenue, expenses, profit, profitMargin };
-            };
-
-            const filterTransactions = () => {
-                let filtered = transactions;
+                // Load initial data
+                loadInitialData();
                 
-                // Filter by type
-                if (filter !== 'all') {
-                    filtered = filtered.filter(t => t.type === filter);
-                }
+                // Set today's date as default for start date
+                document.getElementById('campaign-start').valueAsDate = new Date();
+            }
+            
+            function setupTabs() {
+                const tabs = ['overview', 'campaigns', 'analytics', 'budget'];
                 
-                // Filter by time range
-                const now = new Date();
-                if (timeRange === 'month') {
-                    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-                    filtered = filtered.filter(t => new Date(t.date) >= startOfMonth);
-                } else if (timeRange === 'week') {
-                    const startOfWeek = new Date(now);
-                    startOfWeek.setDate(now.getDate() - now.getDay());
-                    filtered = filtered.filter(t => new Date(t.date) >= startOfWeek);
-                }
-                
-                return filtered;
-            };
-
-            const addTransaction = (e) => {
-                e.preventDefault();
-                if (!description.trim() || !amount || !category) return;
-
-                const newTransaction = {
-                    id: Date.now().toString(),
-                    description: description.trim(),
-                    amount: parseFloat(amount),
-                    type,
-                    category,
-                    date,
-                    createdAt: new Date().toISOString()
-                };
-
-                setTransactions([newTransaction, ...transactions]);
-                resetForm();
-            };
-
-            const deleteTransaction = (id) => {
-                setTransactions(transactions.filter(t => t.id !== id));
-            };
-
-            const startEditing = (transaction) => {
-                setEditingId(transaction.id);
-                setEditData({ ...transaction });
-            };
-
-            const cancelEditing = () => {
-                setEditingId(null);
-                setEditData({});
-            };
-
-            const saveEdit = () => {
-                setTransactions(transactions.map(t => 
-                    t.id === editingId ? { ...editData, amount: parseFloat(editData.amount) } : t
-                ));
-                cancelEditing();
-            };
-
-            const resetForm = () => {
-                setDescription('');
-                setAmount('');
-                setCategory('');
-                setDate(new Date().toISOString().split('T')[0]);
-            };
-
-            const formatCurrency = (value) => {
-                return new Intl.NumberFormat('en-US', {
-                    style: 'currency',
-                    currency: 'USD'
-                }).format(value);
-            };
-
-            const { revenue, expenses, profit, profitMargin } = calculateTotals();
-            const filteredTransactions = filterTransactions();
-
-            // Category breakdown
-            const categoryBreakdown = () => {
-                const breakdown = {};
-                filteredTransactions.forEach(t => {
-                    if (!breakdown[t.category]) breakdown[t.category] = 0;
-                    breakdown[t.category] += t.amount;
+                tabs.forEach(tab => {
+                    document.getElementById(`${tab}-tab`).addEventListener('click', function() {
+                        // Update active tab
+                        tabs.forEach(t => {
+                            const tabElement = document.getElementById(`${t}-tab`);
+                            const contentElement = document.getElementById(`${t}-content`);
+                            
+                            if (t === tab) {
+                                tabElement.classList.add('bg-white', 'text-purple-600', 'shadow-md');
+                                tabElement.classList.remove('text-gray-600');
+                                contentElement.classList.remove('hidden');
+                            } else {
+                                tabElement.classList.remove('bg-white', 'text-purple-600', 'shadow-md');
+                                tabElement.classList.add('text-gray-600');
+                                contentElement.classList.add('hidden');
+                            }
+                        });
+                    });
                 });
-                return breakdown;
-            };
-
-            // Monthly trend data
-            const getMonthlyTrendData = () => {
-                const monthlyData = {};
-                const now = new Date();
-                const months = [];
-                
-                // Generate last 6 months
-                for (let i = 5; i >= 0; i--) {
-                    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-                    const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
-                    months.push(monthKey);
-                    monthlyData[monthKey] = { revenue: 0, expenses: 0 };
-                }
-                
-                // Populate with transaction data
-                transactions.forEach(t => {
-                    const date = new Date(t.date);
-                    const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
-                    
-                    if (monthlyData[monthKey]) {
-                        if (t.type === 'revenue') {
-                            monthlyData[monthKey].revenue += t.amount;
-                        } else {
-                            monthlyData[monthKey].expenses += t.amount;
-                        }
+            }
+            
+            function setupForms() {
+                // Campaign form
+                document.getElementById('campaign-form').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    if (appState.editingCampaignId) {
+                        updateCampaign();
+                    } else {
+                        addCampaign();
                     }
                 });
                 
-                return {
-                    labels: months,
-                    revenue: months.map(m => monthlyData[m].revenue),
-                    expenses: months.map(m => monthlyData[m].expenses)
+                // Cancel edit button
+                document.getElementById('cancel-edit').addEventListener('click', function() {
+                    resetCampaignForm();
+                });
+                
+                // Budget form
+                document.getElementById('budget-form').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    saveBudgetAllocation();
+                });
+                
+                // Initialize budget allocation inputs
+                initBudgetAllocationInputs();
+            }
+            
+            function initBudgetAllocationInputs() {
+                const channels = [
+                    'Social Media', 'Email Marketing', 'PPC', 'SEO', 
+                    'Content Marketing', 'Influencer', 'Affiliate', 'Traditional'
+                ];
+                
+                const container = document.getElementById('budget-allocation-inputs');
+                container.innerHTML = '';
+                
+                channels.forEach(channel => {
+                    const div = document.createElement('div');
+                    div.innerHTML = `
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            ${channel} (%)
+                        </label>
+                        <input type="number" step="0.01" id="budget-${channel.replace(/\s+/g, '-').toLowerCase()}" 
+                            placeholder="0" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent budget-percentage">
+                    `;
+                    container.appendChild(div);
+                });
+            }
+            
+            function addCampaign() {
+                const campaign = {
+                    id: Date.now().toString(),
+                    name: document.getElementById('campaign-name').value,
+                    channel: document.getElementById('campaign-channel').value,
+                    startDate: document.getElementById('campaign-start').value,
+                    endDate: document.getElementById('campaign-end').value || null,
+                    budget: parseFloat(document.getElementById('campaign-budget').value),
+                    revenue: parseFloat(document.getElementById('campaign-revenue').value) || 0,
+                    customers: parseInt(document.getElementById('campaign-customers').value) || 0,
+                    status: document.getElementById('campaign-status').value,
+                    createdAt: new Date().toISOString()
                 };
-            };
-
-            // Cash flow data
-            const getCashFlowData = () => {
-                const cashFlow = { revenue: 0, expenses: 0 };
-                const now = new Date();
-                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
                 
-                transactions
-                    .filter(t => new Date(t.date) >= startOfMonth)
-                    .forEach(t => {
-                        if (t.type === 'revenue') {
-                            cashFlow.revenue += t.amount;
-                        } else {
-                            cashFlow.expenses += t.amount;
-                        }
-                    });
+                // Calculate derived metrics
+                campaign.roi = campaign.budget > 0 ? ((campaign.revenue - campaign.budget) / campaign.budget) * 100 : 0;
+                campaign.cac = campaign.customers > 0 ? campaign.budget / campaign.customers : 0;
                 
-                return cashFlow;
-            };
-
-            // Chart rendering functions
-            const renderFinancialChart = () => {
-                const ctx = financialChartRef.current?.getContext('2d');
-                if (!ctx) return;
+                // Save campaign
+                saveCampaign(campaign);
+                resetCampaignForm();
+                updateUI();
                 
-                // Clear previous chart
-                if (window.financialChart) {
-                    window.financialChart.destroy();
+                // Show success message
+                showNotification('Campaign added successfully!', 'success');
+            }
+            
+            function updateCampaign() {
+                const campaign = {
+                    id: appState.editingCampaignId,
+                    name: document.getElementById('campaign-name').value,
+                    channel: document.getElementById('campaign-channel').value,
+                    startDate: document.getElementById('campaign-start').value,
+                    endDate: document.getElementById('campaign-end').value || null,
+                    budget: parseFloat(document.getElementById('campaign-budget').value),
+                    revenue: parseFloat(document.getElementById('campaign-revenue').value) || 0,
+                    customers: parseInt(document.getElementById('campaign-customers').value) || 0,
+                    status: document.getElementById('campaign-status').value,
+                    createdAt: getCampaigns().find(c => c.id === appState.editingCampaignId)?.createdAt || new Date().toISOString()
+                };
+                
+                // Calculate derived metrics
+                campaign.roi = campaign.budget > 0 ? ((campaign.revenue - campaign.budget) / campaign.budget) * 100 : 0;
+                campaign.cac = campaign.customers > 0 ? campaign.budget / campaign.customers : 0;
+                
+                // Update campaign
+                let campaigns = getCampaigns();
+                campaigns = campaigns.map(c => c.id === appState.editingCampaignId ? campaign : c);
+                localStorage.setItem('marketing-campaigns', JSON.stringify(campaigns));
+                
+                resetCampaignForm();
+                updateUI();
+                
+                // Show success message
+                showNotification('Campaign updated successfully!', 'success');
+            }
+            
+            function saveCampaign(campaign) {
+                let campaigns = JSON.parse(localStorage.getItem('marketing-campaigns') || '[]');
+                campaigns.push(campaign);
+                localStorage.setItem('marketing-campaigns', JSON.stringify(campaigns));
+            }
+            
+            function getCampaigns() {
+                return JSON.parse(localStorage.getItem('marketing-campaigns') || '[]');
+            }
+            
+            function saveBudgetAllocation() {
+                const totalBudget = parseFloat(document.getElementById('total-budget-input').value);
+                const allocations = {};
+                
+                // Collect allocation percentages
+                const inputs = document.querySelectorAll('.budget-percentage');
+                inputs.forEach(input => {
+                    const channel = input.id.replace('budget-', '').replace(/-/g, ' ');
+                    allocations[channel] = parseFloat(input.value) || 0;
+                });
+                
+                // Save budget
+                const budgetData = {
+                    totalBudget,
+                    allocations,
+                    updatedAt: new Date().toISOString()
+                };
+                
+                localStorage.setItem('marketing-budget', JSON.stringify(budgetData));
+                updateUI();
+                
+                // Show success message
+                showNotification('Budget allocation saved successfully!', 'success');
+            }
+            
+            function getBudget() {
+                return JSON.parse(localStorage.getItem('marketing-budget') || '{}');
+            }
+            
+            function loadInitialData() {
+                updateUI();
+            }
+            
+            function updateUI() {
+                const campaigns = getCampaigns();
+                const budget = getBudget();
+                
+                // Update KPI cards
+                updateKPIs(campaigns, budget);
+                
+                // Update campaign list
+                updateCampaignList(campaigns);
+                
+                // Update charts
+                updateCharts(campaigns, budget);
+                
+                // Update performance table
+                updatePerformanceTable(campaigns);
+                
+                // Update budget utilization
+                updateBudgetUtilization(campaigns, budget);
+            }
+            
+            function updateKPIs(campaigns, budget) {
+                // Calculate metrics
+                const totalRevenue = campaigns.reduce((sum, c) => sum + c.revenue, 0);
+                const totalBudget = campaigns.reduce((sum, c) => sum + c.budget, 0);
+                const totalROI = totalBudget > 0 ? ((totalRevenue - totalBudget) / totalBudget) * 100 : 0;
+                const totalCustomers = campaigns.reduce((sum, c) => sum + c.customers, 0);
+                const avgCAC = totalCustomers > 0 ? totalBudget / totalCustomers : 0;
+                
+                // Update KPI elements
+                document.getElementById('total-roi').textContent = `${totalROI.toFixed(1)}%`;
+                document.getElementById('total-cac').textContent = `$${avgCAC.toFixed(2)}`;
+                document.getElementById('total-revenue').textContent = `$${totalRevenue.toLocaleString()}`;
+                document.getElementById('total-budget').textContent = `$${totalBudget.toLocaleString()}`;
+                
+                // Update campaign count
+                document.getElementById('campaign-count').textContent = campaigns.length;
+                document.getElementById('recent-campaigns-count').textContent = `${campaigns.length} campaigns`;
+            }
+            
+            function updateCampaignList(campaigns) {
+                const container = document.getElementById('campaigns-list');
+                const recentContainer = document.getElementById('recent-campaigns');
+                
+                if (campaigns.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-8 text-gray-500">
+                            <i class="fas fa-bullhorn text-4xl mb-4 text-gray-300"></i>
+                            <p>No campaigns found. Add your first campaign!</p>
+                        </div>
+                    `;
+                    recentContainer.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-gray-500">No campaigns found</td>
+                        </tr>
+                    `;
+                    return;
                 }
                 
-                const data = {
-                    labels: ['Revenue', 'Expenses', 'Profit'],
-                    datasets: [{
-                        data: [revenue, expenses, profit],
-                        backgroundColor: [
-                            'rgba(16, 185, 129, 0.8)',
-                            'rgba(239, 68, 68, 0.8)',
-                            'rgba(59, 130, 246, 0.8)'
-                        ],
-                        borderColor: [
-                            'rgb(16, 185, 129)',
-                            'rgb(239, 68, 68)',
-                            'rgb(59, 130, 246)'
-                        ],
-                        borderWidth: 2,
-                        borderRadius: 8,
-                        borderSkipped: false,
-                    }]
-                };
+                // Sort campaigns by creation date (newest first)
+                campaigns.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
                 
-                window.financialChart = new Chart(ctx, {
-                    type: 'bar',
-                    data: data,
+                // Update campaigns list
+                container.innerHTML = campaigns.map(campaign => `
+                    <div class="border border-gray-200 rounded-lg p-4 hover:border-purple-300 transition duration-200 fade-in">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-3 mb-1">
+                                    <span class="font-semibold text-gray-800">${campaign.name}</span>
+                                    <span class="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">${campaign.channel}</span>
+                                    <span class="status-badge ${getStatusColor(campaign.status)}">${campaign.status}</span>
+                                </div>
+                                <div class="text-sm text-gray-600 ml-1">
+                                    ${formatDate(campaign.startDate)} ${campaign.endDate ? `- ${formatDate(campaign.endDate)}` : ''}
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="text-right">
+                                    <div class="font-bold text-gray-800">$${campaign.budget.toLocaleString()}</div>
+                                    <div class="text-sm text-gray-600">Budget</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="font-bold ${campaign.roi >= 0 ? 'text-green-600' : 'text-red-600'}">
+                                        ${campaign.roi.toFixed(1)}%
+                                    </div>
+                                    <div class="text-sm text-gray-600">ROI</div>
+                                </div>
+                                <div class="flex gap-1">
+                                    <button class="edit-campaign p-2 text-blue-500 hover:bg-blue-50 rounded transition duration-200" 
+                                            title="Edit campaign" data-campaign-id="${campaign.id}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="delete-campaign p-2 text-red-500 hover:bg-red-50 rounded transition duration-200" 
+                                            title="Delete campaign" data-campaign-id="${campaign.id}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                
+                // Update recent campaigns table (show only 5 most recent)
+                const recentCampaigns = campaigns.slice(0, 5);
+                recentContainer.innerHTML = recentCampaigns.map(campaign => `
+                    <tr class="border-b border-gray-100 hover:bg-gray-50">
+                        <td class="py-3">${campaign.name}</td>
+                        <td class="py-3">${campaign.channel}</td>
+                        <td class="text-right py-3">$${campaign.budget.toLocaleString()}</td>
+                        <td class="text-right py-3">$${campaign.revenue.toLocaleString()}</td>
+                        <td class="text-right py-3 ${campaign.roi >= 0 ? 'text-green-600' : 'text-red-600'}">${campaign.roi.toFixed(1)}%</td>
+                        <td class="text-right py-3">$${campaign.cac.toFixed(2)}</td>
+                        <td class="text-center py-3">
+                            <span class="status-badge ${getStatusColor(campaign.status)}">${campaign.status}</span>
+                        </td>
+                    </tr>
+                `).join('');
+                
+                // Set up event handlers for the new buttons
+                setupCampaignEventHandlers();
+            }
+            
+            function setupCampaignEventHandlers() {
+                // Delete buttons
+                document.querySelectorAll('.delete-campaign').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const campaignId = this.getAttribute('data-campaign-id');
+                        deleteCampaign(campaignId);
+                    });
+                });
+                
+                // Edit buttons
+                document.querySelectorAll('.edit-campaign').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const campaignId = this.getAttribute('data-campaign-id');
+                        startEditingCampaign(campaignId);
+                    });
+                });
+            }
+            
+            function deleteCampaign(campaignId) {
+                if (confirm('Are you sure you want to delete this campaign?')) {
+                    let campaigns = getCampaigns();
+                    campaigns = campaigns.filter(campaign => campaign.id !== campaignId);
+                    localStorage.setItem('marketing-campaigns', JSON.stringify(campaigns));
+                    updateUI();
+                    
+                    // Show success message
+                    showNotification('Campaign deleted successfully!', 'success');
+                }
+            }
+            
+            function startEditingCampaign(campaignId) {
+                const campaigns = getCampaigns();
+                const campaign = campaigns.find(c => c.id === campaignId);
+                
+                if (campaign) {
+                    appState.editingCampaignId = campaignId;
+                    
+                    // Populate form with campaign data
+                    document.getElementById('campaign-name').value = campaign.name;
+                    document.getElementById('campaign-channel').value = campaign.channel;
+                    document.getElementById('campaign-start').value = campaign.startDate;
+                    document.getElementById('campaign-end').value = campaign.endDate || '';
+                    document.getElementById('campaign-budget').value = campaign.budget;
+                    document.getElementById('campaign-revenue').value = campaign.revenue;
+                    document.getElementById('campaign-customers').value = campaign.customers;
+                    document.getElementById('campaign-status').value = campaign.status;
+                    
+                    // Change form to edit mode
+                    document.getElementById('form-title').textContent = 'Edit Campaign';
+                    document.getElementById('submit-button').innerHTML = '<i class="fas fa-save mr-2"></i>Update Campaign';
+                    document.getElementById('submit-button').classList.remove('bg-green-500', 'hover:bg-green-600');
+                    document.getElementById('submit-button').classList.add('bg-blue-500', 'hover:bg-blue-600');
+                    document.getElementById('cancel-edit').classList.remove('hidden');
+                    
+                    // Scroll to form
+                    document.getElementById('campaign-form').scrollIntoView({ behavior: 'smooth' });
+                }
+            }
+            
+            function resetCampaignForm() {
+                document.getElementById('campaign-form').reset();
+                document.getElementById('campaign-start').valueAsDate = new Date();
+                
+                // Reset edit mode
+                appState.editingCampaignId = null;
+                document.getElementById('form-title').textContent = 'Add New Campaign';
+                document.getElementById('submit-button').innerHTML = '<i class="fas fa-plus mr-2"></i>Add Campaign';
+                document.getElementById('submit-button').classList.remove('bg-blue-500', 'hover:bg-blue-600');
+                document.getElementById('submit-button').classList.add('bg-green-500', 'hover:bg-green-600');
+                document.getElementById('cancel-edit').classList.add('hidden');
+            }
+            
+            function updatePerformanceTable(campaigns) {
+                const container = document.getElementById('performance-table');
+                
+                if (campaigns.length === 0) {
+                    container.innerHTML = `
+                        <tr>
+                            <td colspan="8" class="text-center py-4 text-gray-500">No campaigns found</td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = campaigns.map(campaign => `
+                    <tr class="border-b border-gray-100 hover:bg-gray-50">
+                        <td class="py-3">${campaign.name}</td>
+                        <td class="py-3">${campaign.channel}</td>
+                        <td class="text-right py-3">$${campaign.budget.toLocaleString()}</td>
+                        <td class="text-right py-3">$${campaign.revenue.toLocaleString()}</td>
+                        <td class="text-right py-3">${campaign.customers.toLocaleString()}</td>
+                        <td class="text-right py-3">$${campaign.cac.toFixed(2)}</td>
+                        <td class="text-right py-3 ${campaign.roi >= 0 ? 'text-green-600' : 'text-red-600'}">${campaign.roi.toFixed(1)}%</td>
+                        <td class="text-center py-3">
+                            <span class="status-badge ${getStatusColor(campaign.status)}">${campaign.status}</span>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+            
+            function updateBudgetUtilization(campaigns, budget) {
+                const container = document.getElementById('budget-utilization');
+                
+                if (!budget.totalBudget || Object.keys(budget.allocations || {}).length === 0) {
+                    container.innerHTML = `
+                        <div class="col-span-4 text-center py-4 text-gray-500">
+                            <p>No budget allocation set. Configure your budget allocation first.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Calculate actual spend by channel
+                const actualSpendByChannel = {};
+                campaigns.forEach(campaign => {
+                    if (!actualSpendByChannel[campaign.channel]) {
+                        actualSpendByChannel[campaign.channel] = 0;
+                    }
+                    actualSpendByChannel[campaign.channel] += campaign.budget;
+                });
+                
+                // Create utilization cards
+                container.innerHTML = Object.entries(budget.allocations).map(([channel, percentage]) => {
+                    const allocatedBudget = (budget.totalBudget * percentage) / 100;
+                    const actualSpend = actualSpendByChannel[channel] || 0;
+                    const utilization = allocatedBudget > 0 ? (actualSpend / allocatedBudget) * 100 : 0;
+                    
+                    return `
+                        <div class="bg-gray-50 rounded-lg p-4 text-center hover-lift">
+                            <div class="text-lg font-bold text-gray-800">${channel}</div>
+                            <div class="text-sm text-gray-600 mb-2">${percentage}% allocated</div>
+                            <div class="text-2xl font-bold ${utilization > 100 ? 'text-red-600' : utilization > 80 ? 'text-orange-600' : 'text-green-600'}">
+                                ${utilization.toFixed(1)}%
+                            </div>
+                            <div class="text-xs text-gray-600">utilized</div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            function updateCharts(campaigns, budget) {
+                // ROI by Channel Chart (Weighted)
+                const roiByChannel = calculateWeightedROIByChannel(campaigns);
+                createBarChart('roi-channel-chart', 
+                    Object.keys(roiByChannel), 
+                    Object.values(roiByChannel), 
+                    'Weighted ROI %', 
+                    '#8b5cf6'
+                );
+                
+                // Budget Allocation Chart
+                if (budget.allocations) {
+                    createDoughnutChart('budget-allocation-chart', 
+                        Object.keys(budget.allocations), 
+                        Object.values(budget.allocations), 
+                        'Budget Allocation'
+                    );
+                }
+                
+                // Budget vs Actual Chart
+                if (budget.allocations) {
+                    const actualSpendByChannel = calculateActualSpendByChannel(campaigns);
+                    createBudgetVsActualChart('budget-vs-actual-chart', budget, actualSpendByChannel);
+                }
+                
+                // ROI Trends Chart
+                createROITrendsChart(campaigns);
+                
+                // CAC by Channel Chart
+                createCACByChannelChart(campaigns);
+                
+                // Revenue vs Spend Chart
+                createRevenueSpendChart(campaigns);
+                
+                // Channel Performance Chart
+                createChannelPerformanceChart(campaigns);
+            }
+            
+            function calculateWeightedROIByChannel(campaigns) {
+                const roiByChannel = {};
+                const revenueByChannel = {};
+                const budgetByChannel = {};
+                
+                campaigns.forEach(campaign => {
+                    if (!roiByChannel[campaign.channel]) {
+                        revenueByChannel[campaign.channel] = 0;
+                        budgetByChannel[campaign.channel] = 0;
+                    }
+                    revenueByChannel[campaign.channel] += campaign.revenue;
+                    budgetByChannel[campaign.channel] += campaign.budget;
+                });
+                
+                // Calculate weighted ROI per channel
+                Object.keys(revenueByChannel).forEach(channel => {
+                    const channelRevenue = revenueByChannel[channel];
+                    const channelBudget = budgetByChannel[channel];
+                    roiByChannel[channel] = channelBudget > 0 ? 
+                        ((channelRevenue - channelBudget) / channelBudget) * 100 : 0;
+                });
+                
+                return roiByChannel;
+            }
+            
+            function calculateActualSpendByChannel(campaigns) {
+                const actualSpendByChannel = {};
+                
+                campaigns.forEach(campaign => {
+                    if (!actualSpendByChannel[campaign.channel]) {
+                        actualSpendByChannel[campaign.channel] = 0;
+                    }
+                    actualSpendByChannel[campaign.channel] += campaign.budget;
+                });
+                
+                return actualSpendByChannel;
+            }
+            
+            function createROITrendsChart(campaigns) {
+                const ctx = document.getElementById('roi-trends-chart').getContext('2d');
+                
+                // Generate last 6 months
+                const months = [];
+                const monthlyROI = {};
+                const now = new Date();
+                
+                for (let i = 5; i >= 0; i--) {
+                    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                    const monthKey = date.toLocaleDateString('en-US', { month: 'short' });
+                    months.push(monthKey);
+                    monthlyROI[monthKey] = 0;
+                }
+                
+                // Calculate average ROI per month
+                const monthlyData = { ...monthlyROI };
+                const monthCount = { ...monthlyROI };
+                
+                campaigns.forEach(campaign => {
+                    const campaignDate = new Date(campaign.startDate);
+                    const monthKey = campaignDate.toLocaleDateString('en-US', { month: 'short' });
+                    
+                    if (monthlyData[monthKey] !== undefined) {
+                        monthlyData[monthKey] += campaign.roi;
+                        monthCount[monthKey]++;
+                    }
+                });
+                
+                // Calculate averages
+                const roiData = months.map(month => 
+                    monthCount[month] > 0 ? monthlyData[month] / monthCount[month] : 0
+                );
+                
+                // Clear previous chart
+                if (appState.charts.roiTrendsChart) {
+                    appState.charts.roiTrendsChart.destroy();
+                }
+                
+                appState.charts.roiTrendsChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: months,
+                        datasets: [{
+                            label: 'Average ROI %',
+                            data: roiData,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.3,
+                            fill: true
+                        }]
+                    },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
-                            legend: {
-                                display: false
-                            },
                             tooltip: {
                                 callbacks: {
                                     label: function(context) {
-                                        return `${context.label}: ${formatCurrency(context.raw)}`;
+                                        return `ROI: ${context.raw.toFixed(1)}%`;
                                     }
                                 }
                             }
@@ -298,110 +1015,119 @@
                         scales: {
                             y: {
                                 beginAtZero: true,
-                                ticks: {
-                                    callback: function(value) {
-                                        return formatCurrency(value);
-                                    }
+                                title: {
+                                    display: true,
+                                    text: 'ROI %'
                                 }
                             }
                         }
                     }
                 });
-            };
-
-            const renderCategoryChart = () => {
-                const ctx = categoryChartRef.current?.getContext('2d');
-                if (!ctx) return;
+            }
+            
+            function createCACByChannelChart(campaigns) {
+                const ctx = document.getElementById('cac-channel-chart').getContext('2d');
+                
+                // Calculate average CAC by channel
+                const cacByChannel = {};
+                const channelCount = {};
+                
+                campaigns.forEach(campaign => {
+                    if (!cacByChannel[campaign.channel]) {
+                        cacByChannel[campaign.channel] = 0;
+                        channelCount[campaign.channel] = 0;
+                    }
+                    cacByChannel[campaign.channel] += campaign.cac;
+                    channelCount[campaign.channel]++;
+                });
+                
+                // Calculate averages
+                const channels = Object.keys(cacByChannel);
+                const cacData = channels.map(channel => 
+                    channelCount[channel] > 0 ? cacByChannel[channel] / channelCount[channel] : 0
+                );
                 
                 // Clear previous chart
-                if (window.categoryChart) {
-                    window.categoryChart.destroy();
+                if (appState.charts.cacChannelChart) {
+                    appState.charts.cacChannelChart.destroy();
                 }
                 
-                const breakdown = categoryBreakdown();
-                const labels = Object.keys(breakdown);
-                const data = Object.values(breakdown);
-                
-                // Generate colors
-                const backgroundColors = labels.map((_, i) => {
-                    const hue = (i * 137.5) % 360; // Golden angle for distinct colors
-                    return `hsla(${hue}, 70%, 65%, 0.8)`;
-                });
-                
-                const borderColors = labels.map((_, i) => {
-                    const hue = (i * 137.5) % 360;
-                    return `hsl(${hue}, 70%, 50%)`;
-                });
-                
-                window.categoryChart = new Chart(ctx, {
-                    type: 'doughnut',
+                appState.charts.cacChannelChart = new Chart(ctx, {
+                    type: 'bar',
                     data: {
-                        labels: labels,
+                        labels: channels,
                         datasets: [{
-                            data: data,
-                            backgroundColor: backgroundColors,
-                            borderColor: borderColors,
-                            borderWidth: 2,
-                            hoverOffset: 15
+                            label: 'Average Customer Acquisition Cost',
+                            data: cacData,
+                            backgroundColor: '#3b82f6',
+                            borderColor: '#3b82f6',
+                            borderWidth: 1
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
-                            legend: {
-                                position: 'right',
-                                labels: {
-                                    boxWidth: 12,
-                                    padding: 15
-                                }
-                            },
                             tooltip: {
                                 callbacks: {
                                     label: function(context) {
-                                        const value = context.raw;
-                                        const total = data.reduce((a, b) => a + b, 0);
-                                        const percentage = ((value / total) * 100).toFixed(1);
-                                        return `${context.label}: ${formatCurrency(value)} (${percentage}%)`;
+                                        return `CAC: $${context.raw.toFixed(2)}`;
                                     }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Cost ($)'
                                 }
                             }
                         }
                     }
                 });
-            };
-
-            const renderTrendChart = () => {
-                const ctx = trendChartRef.current?.getContext('2d');
-                if (!ctx) return;
+            }
+            
+            function createRevenueSpendChart(campaigns) {
+                const ctx = document.getElementById('revenue-spend-chart').getContext('2d');
+                
+                // Calculate total revenue and spend by channel
+                const revenueByChannel = {};
+                const spendByChannel = {};
+                
+                campaigns.forEach(campaign => {
+                    if (!revenueByChannel[campaign.channel]) {
+                        revenueByChannel[campaign.channel] = 0;
+                        spendByChannel[campaign.channel] = 0;
+                    }
+                    revenueByChannel[campaign.channel] += campaign.revenue;
+                    spendByChannel[campaign.channel] += campaign.budget;
+                });
+                
+                const channels = Object.keys(revenueByChannel);
+                const revenueData = channels.map(channel => revenueByChannel[channel]);
+                const spendData = channels.map(channel => spendByChannel[channel]);
                 
                 // Clear previous chart
-                if (window.trendChart) {
-                    window.trendChart.destroy();
+                if (appState.charts.revenueSpendChart) {
+                    appState.charts.revenueSpendChart.destroy();
                 }
                 
-                const trendData = getMonthlyTrendData();
-                
-                window.trendChart = new Chart(ctx, {
-                    type: 'line',
+                appState.charts.revenueSpendChart = new Chart(ctx, {
+                    type: 'bar',
                     data: {
-                        labels: trendData.labels,
+                        labels: channels,
                         datasets: [
                             {
                                 label: 'Revenue',
-                                data: trendData.revenue,
-                                borderColor: 'rgb(16, 185, 129)',
-                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                                tension: 0.3,
-                                fill: true
+                                data: revenueData,
+                                backgroundColor: '#10b981'
                             },
                             {
-                                label: 'Expenses',
-                                data: trendData.expenses,
-                                borderColor: 'rgb(239, 68, 68)',
-                                backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                                tension: 0.3,
-                                fill: true
+                                label: 'Spend',
+                                data: spendData,
+                                backgroundColor: '#ef4444'
                             }
                         ]
                     },
@@ -412,52 +1138,95 @@
                             tooltip: {
                                 callbacks: {
                                     label: function(context) {
-                                        return `${context.dataset.label}: ${formatCurrency(context.raw)}`;
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    callback: function(value) {
-                                        return formatCurrency(value);
+                                        return `${context.dataset.label}: $${context.raw.toLocaleString()}`;
                                     }
                                 }
                             }
                         }
                     }
                 });
-            };
-
-            const renderCashFlowChart = () => {
-                const ctx = cashFlowChartRef.current?.getContext('2d');
-                if (!ctx) return;
+            }
+            
+            function createChannelPerformanceChart(campaigns) {
+                const ctx = document.getElementById('channel-performance-chart').getContext('2d');
+                
+                // Calculate performance score (ROI * 0.6 + (1/CAC) * 0.4)
+                const performanceByChannel = {};
+                
+                campaigns.forEach(campaign => {
+                    if (!performanceByChannel[campaign.channel]) {
+                        performanceByChannel[campaign.channel] = {
+                            roiSum: 0,
+                            cacSum: 0,
+                            count: 0
+                        };
+                    }
+                    performanceByChannel[campaign.channel].roiSum += campaign.roi;
+                    performanceByChannel[campaign.channel].cacSum += campaign.cac;
+                    performanceByChannel[campaign.channel].count++;
+                });
+                
+                // Calculate performance scores
+                const channels = Object.keys(performanceByChannel);
+                const performanceData = channels.map(channel => {
+                    const data = performanceByChannel[channel];
+                    const avgROI = data.roiSum / data.count;
+                    const avgCAC = data.cacSum / data.count;
+                    // Normalize scores (simplified calculation)
+                    return (avgROI * 0.6) + (100 / (avgCAC || 1)) * 0.4;
+                });
                 
                 // Clear previous chart
-                if (window.cashFlowChart) {
-                    window.cashFlowChart.destroy();
+                if (appState.charts.channelPerformanceChart) {
+                    appState.charts.channelPerformanceChart.destroy();
                 }
                 
-                const cashFlow = getCashFlowData();
-                
-                window.cashFlowChart = new Chart(ctx, {
-                    type: 'pie',
+                appState.charts.channelPerformanceChart = new Chart(ctx, {
+                    type: 'radar',
                     data: {
-                        labels: ['Revenue', 'Expenses'],
+                        labels: channels,
                         datasets: [{
-                            data: [cashFlow.revenue, cashFlow.expenses],
-                            backgroundColor: [
-                                'rgba(16, 185, 129, 0.8)',
-                                'rgba(239, 68, 68, 0.8)'
-                            ],
-                            borderColor: [
-                                'rgb(16, 185, 129)',
-                                'rgb(239, 68, 68)'
-                            ],
-                            borderWidth: 2,
-                            hoverOffset: 15
+                            label: 'Performance Score',
+                            data: performanceData,
+                            backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                            borderColor: '#8b5cf6',
+                            pointBackgroundColor: '#8b5cf6',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: '#8b5cf6'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            r: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Chart creation functions
+            function createBarChart(canvasId, labels, data, label, color) {
+                const ctx = document.getElementById(canvasId).getContext('2d');
+                
+                // Clear previous chart if it exists
+                if (appState.charts[canvasId]) {
+                    appState.charts[canvasId].destroy();
+                }
+                
+                appState.charts[canvasId] = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: label,
+                            data: data,
+                            backgroundColor: color,
+                            borderColor: color,
+                            borderWidth: 1
                         }]
                     },
                     options: {
@@ -467,495 +1236,153 @@
                             tooltip: {
                                 callbacks: {
                                     label: function(context) {
-                                        return `${context.label}: ${formatCurrency(context.raw)}`;
+                                        return `${label}: ${context.raw.toFixed(1)}%`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+            
+            function createDoughnutChart(canvasId, labels, data, label) {
+                const ctx = document.getElementById(canvasId).getContext('2d');
+                const backgroundColors = [
+                    '#8b5cf6', '#3b82f6', '#10b981', '#f59e0b',
+                    '#ef4444', '#6366f1', '#ec4899', '#06b6d4'
+                ];
+                
+                // Clear previous chart if it exists
+                if (appState.charts[canvasId]) {
+                    appState.charts[canvasId].destroy();
+                }
+                
+                appState.charts[canvasId] = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: label,
+                            data: data,
+                            backgroundColor: backgroundColors,
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.label}: ${context.raw}%`;
                                     }
                                 }
                             }
                         }
                     }
                 });
-            };
-
-            // Progress ring component
-            const ProgressRing = ({ value, max, size = 120, strokeWidth = 10, color }) => {
-                const radius = (size - strokeWidth) / 2;
-                const circumference = radius * 2 * Math.PI;
-                const strokeDashoffset = circumference - (value / max) * circumference;
-                
-                return (
-                    <svg width={size} height={size} className="progress-ring">
-                        <circle
-                            className="progress-ring-circle"
-                            stroke={color}
-                            strokeWidth={strokeWidth}
-                            strokeDasharray={circumference}
-                            strokeDashoffset={strokeDashoffset}
-                            strokeLinecap="round"
-                            fill="transparent"
-                            r={radius}
-                            cx={size / 2}
-                            cy={size / 2}
-                        />
-                        <text 
-                            x="50%" 
-                            y="50%" 
-                            textAnchor="middle" 
-                            dy=".3em" 
-                            fontSize="16" 
-                            fontWeight="bold"
-                            fill={color}
-                        >
-                            {Math.round((value / max) * 100)}%
-                        </text>
-                    </svg>
+            }
+            
+            function createBudgetVsActualChart(canvasId, budget, actualSpend) {
+                const ctx = document.getElementById(canvasId).getContext('2d');
+                const channels = Object.keys(budget.allocations);
+                const allocatedData = channels.map(channel => 
+                    (budget.totalBudget * budget.allocations[channel]) / 100
                 );
-            };
-
-            return (
-                <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-8 px-4">
-                    <div className="max-w-7xl mx-auto">
-                        {/* Header */}
-                        <div className="text-center mb-8">
-                            <h1 className="text-4xl font-bold text-gray-800 mb-2">
-                                <i className="fas fa-chart-line text-purple-500 mr-3"></i>
-                                Modern Accounting Manager
-                            </h1>
-                            <p className="text-gray-600">Track revenue, expenses, and profits with advanced analytics</p>
-                        </div>
-
-                        {/* Navigation Tabs */}
-                        <div className="flex justify-center mb-8">
-                            <div className="glass-effect rounded-xl p-1 flex">
-                                {['overview', 'analytics', 'transactions'].map(tab => (
-                                    <button
-                                        key={tab}
-                                        onClick={() => setActiveTab(tab)}
-                                        className={`px-6 py-3 rounded-lg capitalize font-medium transition-all duration-300 ${
-                                            activeTab === tab
-                                                ? 'bg-white text-purple-600 shadow-md'
-                                                : 'text-gray-600 hover:text-purple-500'
-                                        }`}
-                                    >
-                                        <i className={`fas ${
-                                            tab === 'overview' ? 'fa-home' :
-                                            tab === 'analytics' ? 'fa-chart-bar' : 'fa-receipt'
-                                        } mr-2`}></i>
-                                        {tab}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Financial Summary */}
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                            <div className="bg-white rounded-xl shadow-lg p-6 text-center hover-lift">
-                                <div className="text-2xl font-bold text-green-600">{formatCurrency(revenue)}</div>
-                                <div className="text-sm text-gray-600">Total Revenue</div>
-                                <i className="fas fa-arrow-up text-green-500 mt-2"></i>
-                            </div>
-                            <div className="bg-white rounded-xl shadow-lg p-6 text-center hover-lift">
-                                <div className="text-2xl font-bold text-red-600">{formatCurrency(expenses)}</div>
-                                <div className="text-sm text-gray-600">Total Expenses</div>
-                                <i className="fas fa-arrow-down text-red-500 mt-2"></i>
-                            </div>
-                            <div className="bg-white rounded-xl shadow-lg p-6 text-center hover-lift">
-                                <div className={`text-2xl font-bold ${profit >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                                    {formatCurrency(profit)}
-                                </div>
-                                <div className="text-sm text-gray-600">Net Profit</div>
-                                <i className={`fas ${profit >= 0 ? 'fa-smile text-blue-500' : 'fa-frown text-red-500'} mt-2`}></i>
-                            </div>
-                            <div className="bg-white rounded-xl shadow-lg p-6 text-center hover-lift">
-                                <div className={`text-2xl font-bold ${profitMargin >= 0 ? 'text-purple-600' : 'text-red-600'}`}>
-                                    {profitMargin.toFixed(1)}%
-                                </div>
-                                <div className="text-sm text-gray-600">Profit Margin</div>
-                                <i className="fas fa-percentage text-purple-500 mt-2"></i>
-                            </div>
-                        </div>
-
-                        {/* Main Content */}
-                        {activeTab === 'overview' && (
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                                {/* Left Column - Add Transaction and Filters */}
-                                <div className="lg:col-span-1 space-y-6">
-                                    {/* Add Transaction Form */}
-                                    <div className="bg-white rounded-xl shadow-lg p-6 hover-lift">
-                                        <h2 className="text-xl font-semibold mb-4 text-gray-800">
-                                            <i className="fas fa-plus-circle text-green-500 mr-2"></i>
-                                            {editingId ? 'Edit Transaction' : 'Add Transaction'}
-                                        </h2>
-                                        <form onSubmit={editingId ? saveEdit : addTransaction} className="space-y-4">
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                    Type *
-                                                </label>
-                                                <select
-                                                    value={editingId ? editData.type : type}
-                                                    onChange={(e) => editingId 
-                                                        ? setEditData({...editData, type: e.target.value})
-                                                        : setType(e.target.value)
-                                                    }
-                                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
-                                                    required
-                                                >
-                                                    <option value="revenue">Revenue</option>
-                                                    <option value="expense">Expense</option>
-                                                </select>
-                                            </div>
-
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                    Category *
-                                                </label>
-                                                <select
-                                                    value={editingId ? editData.category : category}
-                                                    onChange={(e) => editingId
-                                                        ? setEditData({...editData, category: e.target.value})
-                                                        : setCategory(e.target.value)
-                                                    }
-                                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
-                                                    required
-                                                >
-                                                    <option value="">Select Category</option>
-                                                    {(editingId ? editData.type : type) === 'revenue' 
-                                                        ? revenueCategories.map(cat => (
-                                                            <option key={cat} value={cat}>{cat}</option>
-                                                        ))
-                                                        : expenseCategories.map(cat => (
-                                                            <option key={cat} value={cat}>{cat}</option>
-                                                        ))
-                                                    }
-                                                </select>
-                                            </div>
-
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                    Description *
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    value={editingId ? editData.description : description}
-                                                    onChange={(e) => editingId
-                                                        ? setEditData({...editData, description: e.target.value})
-                                                        : setDescription(e.target.value)
-                                                    }
-                                                    placeholder="Transaction description"
-                                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
-                                                    required
-                                                />
-                                            </div>
-
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                    Amount *
-                                                </label>
-                                                <input
-                                                    type="number"
-                                                    step="0.01"
-                                                    value={editingId ? editData.amount : amount}
-                                                    onChange={(e) => editingId
-                                                        ? setEditData({...editData, amount: e.target.value})
-                                                        : setAmount(e.target.value)
-                                                    }
-                                                    placeholder="0.00"
-                                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
-                                                    required
-                                                />
-                                            </div>
-
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                    Date *
-                                                </label>
-                                                <input
-                                                    type="date"
-                                                    value={editingId ? editData.date : date}
-                                                    onChange={(e) => editingId
-                                                        ? setEditData({...editData, date: e.target.value})
-                                                        : setDate(e.target.value)
-                                                    }
-                                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
-                                                    required
-                                                />
-                                            </div>
-
-                                            <div className="flex gap-2">
-                                                {editingId ? (
-                                                    <>
-                                                        <button
-                                                            type="submit"
-                                                            className="flex-1 bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition duration-200"
-                                                        >
-                                                            <i className="fas fa-save mr-2"></i>Save Changes
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            onClick={cancelEditing}
-                                                            className="bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600 transition duration-200"
-                                                        >
-                                                            Cancel
-                                                        </button>
-                                                    </>
-                                                ) : (
-                                                    <button
-                                                        type="submit"
-                                                        className="w-full bg-green-500 text-white py-3 px-4 rounded-lg hover:bg-green-600 transition duration-200 font-semibold"
-                                                    >
-                                                        <i className="fas fa-plus mr-2"></i>Add Transaction
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </form>
-                                    </div>
-
-                                    {/* Filters */}
-                                    <div className="bg-white rounded-xl shadow-lg p-6 hover-lift">
-                                        <h3 className="text-lg font-semibold mb-4 text-gray-800">
-                                            <i className="fas fa-filter text-blue-500 mr-2"></i>
-                                            Filters
-                                        </h3>
-                                        <div className="space-y-4">
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    Transaction Type
-                                                </label>
-                                                <div className="flex gap-2 flex-wrap">
-                                                    {['all', 'revenue', 'expense'].map(f => (
-                                                        <button
-                                                            key={f}
-                                                            onClick={() => setFilter(f)}
-                                                            className={`px-3 py-2 rounded-lg capitalize text-sm ${
-                                                                filter === f
-                                                                    ? 'bg-blue-500 text-white'
-                                                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                                            }`}
-                                                        >
-                                                            {f}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    Time Range
-                                                </label>
-                                                <div className="flex gap-2 flex-wrap">
-                                                    {['all', 'month', 'week'].map(t => (
-                                                        <button
-                                                            key={t}
-                                                            onClick={() => setTimeRange(t)}
-                                                            className={`px-3 py-2 rounded-lg capitalize text-sm ${
-                                                                timeRange === t
-                                                                    ? 'bg-purple-500 text-white'
-                                                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                                            }`}
-                                                        >
-                                                            {t}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Right Column - Charts */}
-                                <div className="lg:col-span-2 space-y-6">
-                                    {/* Financial Overview Chart */}
-                                    <div className="bg-white rounded-xl shadow-lg p-6 hover-lift">
-                                        <h3 className="text-lg font-semibold mb-4 text-gray-800">
-                                            <i className="fas fa-chart-bar text-purple-500 mr-2"></i>
-                                            Financial Overview
-                                        </h3>
-                                        <div className="chart-container">
-                                            <canvas ref={financialChartRef}></canvas>
-                                        </div>
-                                    </div>
-
-                                    {/* Category Breakdown Chart */}
-                                    <div className="bg-white rounded-xl shadow-lg p-6 hover-lift">
-                                        <h3 className="text-lg font-semibold mb-4 text-gray-800">
-                                            <i className="fas fa-chart-pie text-orange-500 mr-2"></i>
-                                            Category Breakdown
-                                        </h3>
-                                        <div className="chart-container">
-                                            <canvas ref={categoryChartRef}></canvas>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {activeTab === 'analytics' && (
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                {/* Trend Chart */}
-                                <div className="bg-white rounded-xl shadow-lg p-6 hover-lift">
-                                    <h3 className="text-lg font-semibold mb-4 text-gray-800">
-                                        <i className="fas fa-chart-line text-blue-500 mr-2"></i>
-                                        Monthly Trends
-                                    </h3>
-                                    <div className="chart-container">
-                                        <canvas ref={trendChartRef}></canvas>
-                                    </div>
-                                </div>
-
-                                {/* Cash Flow Chart */}
-                                <div className="bg-white rounded-xl shadow-lg p-6 hover-lift">
-                                    <h3 className="text-lg font-semibold mb-4 text-gray-800">
-                                        <i className="fas fa-money-bill-wave text-green-500 mr-2"></i>
-                                        Monthly Cash Flow
-                                    </h3>
-                                    <div className="chart-container">
-                                        <canvas ref={cashFlowChartRef}></canvas>
-                                    </div>
-                                </div>
-
-                                {/* Progress Rings */}
-                                <div className="bg-white rounded-xl shadow-lg p-6 hover-lift">
-                                    <h3 className="text-lg font-semibold mb-4 text-gray-800">
-                                        <i className="fas fa-tachometer-alt text-purple-500 mr-2"></i>
-                                        Financial Health
-                                    </h3>
-                                    <div className="flex justify-around items-center">
-                                        <div className="text-center">
-                                            <ProgressRing 
-                                                value={profitMargin > 0 ? profitMargin : 0} 
-                                                max={50} 
-                                                color="#10b981" 
-                                            />
-                                            <p className="mt-2 text-sm font-medium">Profit Margin</p>
-                                        </div>
-                                        <div className="text-center">
-                                            <ProgressRing 
-                                                value={revenue > 0 ? (expenses / revenue) * 100 : 0} 
-                                                max={100} 
-                                                color="#ef4444" 
-                                            />
-                                            <p className="mt-2 text-sm font-medium">Expense Ratio</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Category Table */}
-                                <div className="bg-white rounded-xl shadow-lg p-6 hover-lift">
-                                    <h3 className="text-lg font-semibold mb-4 text-gray-800">
-                                        <i className="fas fa-table text-orange-500 mr-2"></i>
-                                        Category Details
-                                    </h3>
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full">
-                                            <thead>
-                                                <tr className="border-b">
-                                                    <th className="text-left py-2">Category</th>
-                                                    <th className="text-right py-2">Amount</th>
-                                                    <th className="text-right py-2">Percentage</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {Object.entries(categoryBreakdown()).map(([category, total]) => {
-                                                    const percentage = revenue > 0 ? (total / revenue) * 100 : 0;
-                                                    return (
-                                                        <tr key={category} className="border-b border-gray-100">
-                                                            <td className="py-2">{category}</td>
-                                                            <td className={`text-right font-medium ${
-                                                                revenueCategories.includes(category) ? 'text-green-600' : 'text-red-600'
-                                                            }`}>
-                                                                {formatCurrency(total)}
-                                                            </td>
-                                                            <td className="text-right text-gray-600">
-                                                                {percentage.toFixed(1)}%
-                                                            </td>
-                                                        </tr>
-                                                    );
-                                                })}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {activeTab === 'transactions' && (
-                            <div className="bg-white rounded-xl shadow-lg p-6 hover-lift">
-                                <div className="flex justify-between items-center mb-4">
-                                    <h2 className="text-xl font-semibold text-gray-800">
-                                        <i className="fas fa-list text-blue-500 mr-2"></i>
-                                        Transactions ({filteredTransactions.length})
-                                    </h2>
-                                    <div className="text-sm text-gray-600">
-                                        Showing: {filter === 'all' ? 'All' : filter} • {timeRange === 'all' ? 'All time' : `This ${timeRange}`}
-                                    </div>
-                                </div>
-
-                                {filteredTransactions.length === 0 ? (
-                                    <div className="text-center py-8 text-gray-500">
-                                        <i className="fas fa-receipt text-4xl mb-4 text-gray-300"></i>
-                                        <p>No transactions found. Add your first transaction above!</p>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-3 max-h-96 overflow-y-auto">
-                                        {filteredTransactions.map(transaction => (
-                                            <div key={transaction.id} className="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition duration-200 fade-in">
-                                                <div className="flex justify-between items-start">
-                                                    <div className="flex-1">
-                                                        <div className="flex items-center gap-3 mb-1">
-                                                            <span className={`inline-block w-3 h-3 rounded-full ${
-                                                                transaction.type === 'revenue' ? 'bg-green-500' : 'bg-red-500'
-                                                            }`}></span>
-                                                            <span className="font-semibold text-gray-800">
-                                                                {transaction.description}
-                                                            </span>
-                                                            <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                                                                {transaction.category}
-                                                            </span>
-                                                        </div>
-                                                        <div className="text-sm text-gray-600 ml-6">
-                                                            {new Date(transaction.date).toLocaleDateString()} • 
-                                                            {transaction.type === 'revenue' ? ' Revenue' : ' Expense'}
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <span className={`font-bold ${
-                                                            transaction.type === 'revenue' ? 'text-green-600' : 'text-red-600'
-                                                        }`}>
-                                                            {transaction.type === 'revenue' ? '+' : '-'}{formatCurrency(transaction.amount)}
-                                                        </span>
-                                                        <div className="flex gap-1">
-                                                            <button
-                                                                onClick={() => startEditing(transaction)}
-                                                                className="p-1 text-blue-500 hover:bg-blue-50 rounded transition duration-200"
-                                                                title="Edit transaction"
-                                                            >
-                                                                <i className="fas fa-edit"></i>
-                                                            </button>
-                                                            <button
-                                                                onClick={() => deleteTransaction(transaction.id)}
-                                                                className="p-1 text-red-500 hover:bg-red-50 rounded transition duration-200"
-                                                                title="Delete transaction"
-                                                            >
-                                                                <i className="fas fa-trash"></i>
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {/* Footer */}
-                        <div className="text-center mt-8 text-gray-500 text-sm">
-                            <p>All data is stored locally in your browser. Perfect for personal accounting! 💰</p>
-                        </div>
+                const actualData = channels.map(channel => 
+                    actualSpend[channel] || 0
+                );
+                
+                // Clear previous chart if it exists
+                if (appState.charts[canvasId]) {
+                    appState.charts[canvasId].destroy();
+                }
+                
+                appState.charts[canvasId] = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: channels,
+                        datasets: [
+                            {
+                                label: 'Allocated Budget',
+                                data: allocatedData,
+                                backgroundColor: '#8b5cf6'
+                            },
+                            {
+                                label: 'Actual Spend',
+                                data: actualData,
+                                backgroundColor: '#3b82f6'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.dataset.label}: $${context.raw.toLocaleString()}`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Utility functions
+            function getStatusColor(status) {
+                switch(status) {
+                    case 'Planning': return 'bg-blue-100 text-blue-800';
+                    case 'Active': return 'bg-green-100 text-green-800';
+                    case 'Completed': return 'bg-purple-100 text-purple-800';
+                    case 'Paused': return 'bg-orange-100 text-orange-800';
+                    default: return 'bg-gray-100 text-gray-800';
+                }
+            }
+            
+            function formatDate(dateString) {
+                const options = { year: 'numeric', month: 'short', day: 'numeric' };
+                return new Date(dateString).toLocaleDateString(undefined, options);
+            }
+            
+            function showNotification(message, type = 'info') {
+                // Create notification element
+                const notification = document.createElement('div');
+                notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg text-white ${
+                    type === 'success' ? 'bg-green-500' : 
+                    type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+                } z-50 transform transition-transform duration-300 translate-x-full`;
+                notification.innerHTML = `
+                    <div class="flex items-center">
+                        <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'exclamation' : 'info'}-circle mr-2"></i>
+                        <span>${message}</span>
                     </div>
-                </div>
-            );
-        }
-
-        ReactDOM.render(<AccountingApp />, document.getElementById('root'));
+                `;
+                
+                document.body.appendChild(notification);
+                
+                // Animate in
+                setTimeout(() => {
+                    notification.classList.remove('translate-x-full');
+                }, 100);
+                
+                // Remove after 3 seconds
+                setTimeout(() => {
+                    notification.classList.add('translate-x-full');
+                    setTimeout(() => {
+                        document.body.removeChild(notification);
+                    }, 300);
+                }, 3000);
+            }
+        });
     </script>
 </body>
 </html>
