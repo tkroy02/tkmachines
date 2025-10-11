@@ -279,7 +279,7 @@
     auth.onAuthStateChanged(function(user) {
       if (user) {
         // Redirect to dashboard page
-        window.location.href = "index.html";
+        window.location.href = "dashboard.html";
       }
     });
 
@@ -300,7 +300,7 @@
           hideMessages();
           const user = userCredential.user;
           // Redirect to dashboard page
-          window.location.href = "index.html";
+          window.location.href = "dashboard.html";
         })
         .catch((error) => {
           // Login failed
