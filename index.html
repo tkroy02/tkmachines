@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tk Domicile</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* CSS Reset for consistency */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Define a clean, modern color palette */
+            --color-primary: #2c3e50;    /* Dark Blue/Charcoal for text and header */
+            --color-secondary: #3498db;  /* Bright Blue for accents and links */
+            --color-background: #ecf0f1; /* Light Gray/Off-White for body */
+            --color-card-bg: #ffffff;   /* Pure White for cards */
+            --color-footer: #34495e;     /* Slightly darker blue for footer */
+            --max-width: 1200px;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--color-background);
+            color: var(--color-primary);
+            min-height: 100vh;
+            display: grid;
+            grid-template-rows: auto 1fr auto; /* Header, Main Content, Footer */
+        }
+
+        /* --- HEADER STYLES --- */
+        header {
+            background-color: var(--color-primary);
+            color: var(--color-card-bg);
+            padding: 1.5rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        header .container {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+
+        /* --- MAIN CONTENT STYLES --- */
+        main {
+            padding: 40px 20px;
+        }
+
+        .card-grid {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            display: grid;
+            /* Responsive grid: 1 column on small screens, 2 on medium, 3 on large */
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+        }
+
+        .card {
+            background-color: var(--color-card-bg);
+            border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px); /* Lift effect on hover */
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: var(--color-primary);
+            font-weight: 600;
+        }
+
+        .card a {
+            display: inline-block;
+            background-color: var(--color-secondary);
+            color: var(--color-card-bg);
+            text-decoration: none;
+            padding: 10px 25px;
+            border-radius: 5px;
+            font-weight: 400;
+            transition: background-color 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .card a:hover {
+            background-color: #2980b9; /* Darker shade of secondary color */
+        }
+        
+        /* --- FOOTER STYLES --- */
+        footer {
+            background-color: var(--color-footer);
+            color: var(--color-background);
+            padding: 20px 0;
+            text-align: center;
+            font-size: 0.9rem;
+            box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        footer p {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <h1>Tk Domicile</h1>
+        </div>
+    </header>
+
+    <main>
+        <div class="card-grid">
+            
+            <div class="card">
+                <h2>Tklesson</h2>
+                <a href="https://tklesson.com" target="_blank">Go to Site</a>
+            </div>
+
+            <div class="card">
+                <h2>Tkmachines</h2>
+                <a href="login.html" target="_self">Access Login</a>
+            </div>
+
+            <div class="card">
+                <h2>TkNOUN</h2>
+                <a href="https://tknoun.com" target="_blank">Go to Site</a>
+            </div>
+
+            <div class="card">
+                <h2>TkJAMB</h2>
+                <a href="https://tkjamb.com" target="_blank">Go to Site</a>
+            </div>
+
+            <div class="card">
+                <h2>TkPrimary</h2>
+                <a href="https://tkprimary.com" target="_blank">Go to Site</a>
+            </div>
+
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Tk Domicile. All rights reserved. | Beautifully designed with CSS Grid.</p>
+    </footer>
+
+</body>
+</html>
