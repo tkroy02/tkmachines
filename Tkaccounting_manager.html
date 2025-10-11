@@ -28,6 +28,16 @@
         .kpi-trend { font-size: 0.875rem; margin-top: 4px; }
     </style>
 </head>
+<div id="header"></div>
+<script>
+  fetch('header.html')
+    .then(res => res.text())
+    .then(html => {
+      document.getElementById('header').innerHTML = html;
+    })
+    .catch(err => console.error('Header load error:', err));
+</script>
+
 <body class="bg-gradient-to-br from-blue-50 to-purple-50 min-h-screen">
     <div id="app" class="py-8 px-4">
         <div class="max-w-7xl mx-auto">
