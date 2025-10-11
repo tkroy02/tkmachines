@@ -9,12 +9,13 @@
     </div>
 
     <nav class="menu">
-      <a href="Tkmarketing.html"><i class="fas fa-chart-line"></i> Marketing</a>
-      <a href="Tkchats.html"><i class="fas fa-comments"></i> Chats</a>
-      <a href="Tktask_manager.html"><i class="fas fa-tasks"></i> Tasks</a>
-      <a href="Tkaccounting_manager.html"><i class="fas fa-calculator"></i> Accounting</a>
-      <a href="gst-hst-calculator.html"><i class="fas fa-file-invoice-dollar"></i> Tax</a>
-    </nav>
+  <a href="index.html"><i class="fas fa-home"></i> Home</a>
+  <a href="Tkmarketing.html"><i class="fas fa-chart-line"></i> Marketing</a>
+  <a href="Tkchats.html"><i class="fas fa-comments"></i> Chats</a>
+  <a href="Tktask_manager.html"><i class="fas fa-tasks"></i> Tasks</a>
+  <a href="Tkaccounting_manager.html"><i class="fas fa-calculator"></i> Accounting</a>
+  <a href="gst-hst-calculator.html"><i class="fas fa-file-invoice-dollar"></i> Tax</a>
+</nav>
 
     <div class="user-section">
       <div class="user-avatar">
@@ -38,12 +39,12 @@
         if (window.firebase && firebase.auth) {
           firebase.auth().signOut()
             .then(() => {
-              window.location.href = 'index.html'; // redirect after logout
+              window.location.href = 'login.html'; // redirect after logout
             })
             .catch((err) => console.error('Logout failed:', err));
         } else {
           // Fallback for when Firebase is not available
-          window.location.href = 'index.html';
+          window.location.href = 'login.html';
         }
       });
     }
