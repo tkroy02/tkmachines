@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TK Dashboard</title>
+  <title>TK Dashboard - Admin Login</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -37,6 +37,102 @@
       background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
       color: var(--dark);
       line-height: 1.6;
+    }
+
+    /* Login Page Styles */
+    .login-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .login-card {
+      background: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      padding: 40px;
+      width: 100%;
+      max-width: 450px;
+      text-align: center;
+    }
+
+    .login-logo {
+      margin-bottom: 30px;
+    }
+
+    .login-logo i {
+      font-size: 3.5rem;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 15px;
+    }
+
+    .login-logo h1 {
+      font-size: 2rem;
+      color: var(--dark);
+      margin-bottom: 5px;
+    }
+
+    .login-logo p {
+      color: var(--gray);
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: var(--dark);
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: var(--transition);
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(58, 134, 255, 0.2);
+    }
+
+    .btn {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 25px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      width: 100%;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(58, 134, 255, 0.3);
+    }
+
+    .error-message {
+      background-color: rgba(239, 71, 111, 0.1);
+      color: var(--danger);
+      padding: 10px 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: none;
     }
 
     /* Header */
@@ -108,6 +204,23 @@
       align-items: center;
       justify-content: center;
       font-size: 1.5rem;
+    }
+
+    .logout-btn {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 15px;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logout-btn:hover {
+      background: rgba(255,255,255,0.3);
     }
 
     /* Main Content */
@@ -365,6 +478,10 @@
         flex-wrap: wrap;
         justify-content: center;
       }
+      
+      .login-card {
+        padding: 30px 20px;
+      }
     }
 
     @media (max-width: 576px) {
@@ -388,145 +505,252 @@
   </style>
 </head>
 <body>
-  <header>
-    <div class="header-content">
-      <div class="logo">
+  <!-- Login Page -->
+  <div id="login-page" class="login-container">
+    <div class="login-card">
+      <div class="login-logo">
         <i class="fas fa-tachometer-alt"></i>
-        <div class="logo-text">
-          <h1>TK Dashboard</h1>
-          <p>Access all your TK tools in one place</p>
-        </div>
+        <h1>TK Dashboard</h1>
+        <p>Admin Login Required</p>
       </div>
-      <div class="user-info">
-        <div class="user-avatar">
-          <i class="fas fa-user"></i>
-        </div>
-        <div>
-          <p>Welcome back, <strong>John Doe</strong></p>
-        </div>
+      
+      <div id="error-message" class="error-message">
+        Invalid username or password. Please try again.
       </div>
+      
+      <form id="login-form">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" class="form-control" placeholder="Enter admin username" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" class="form-control" placeholder="Enter admin password" required>
+        </div>
+        
+        <button type="submit" class="btn">Login</button>
+      </form>
     </div>
-  </header>
-
-  <div class="main-content">
-    <section class="welcome-section">
-      <h2>Welcome to Your Dashboard</h2>
-      <p>Manage your business efficiently with our integrated tools. Everything you need in one centralized location.</p>
-    </section>
-
-    <section class="cards-grid">
-      <div class="card marketing">
-        <div class="card-icon">
-          <i class="fas fa-chart-line"></i>
-        </div>
-        <h3>TK Marketing</h3>
-        <p>Analyze campaign performance, track customer engagement, and optimize your marketing strategies.</p>
-        <a href="Tkmarketing.html" class="card-link">
-          Open Tool <i class="fas fa-arrow-right"></i>
-        </a>
-      </div>
-
-      <div class="card chats">
-        <div class="card-icon">
-          <i class="fas fa-comments"></i>
-        </div>
-        <h3>TK Chats</h3>
-        <p>Communicate with your team and customers through our integrated messaging platform.</p>
-        <a href="Tkchats.html" class="card-link">
-          Open Tool <i class="fas fa-arrow-right"></i>
-        </a>
-      </div>
-
-      <div class="card tasks">
-        <div class="card-icon">
-          <i class="fas fa-tasks"></i>
-        </div>
-        <h3>TK Task Manager</h3>
-        <p>Organize projects, assign tasks, and track progress with our comprehensive task management system.</p>
-        <a href="Tktask_manager.html" class="card-link">
-          Open Tool <i class="fas fa-arrow-right"></i>
-        </a>
-      </div>
-
-      <div class="card accounting">
-        <div class="card-icon">
-          <i class="fas fa-calculator"></i>
-        </div>
-        <h3>TK Accounting Manager</h3>
-        <p>Manage finances, track expenses, and generate financial reports with our accounting tools.</p>
-        <a href="Tkaccounting_manager.html" class="card-link">
-          Open Tool <i class="fas fa-arrow-right"></i>
-        </a>
-      </div>
-
-      <div class="card tax">
-        <div class="card-icon">
-          <i class="fas fa-file-invoice-dollar"></i>
-        </div>
-        <h3>TK Tax Compliance</h3>
-        <p>Calculate GST/HST, prepare tax filings, and ensure compliance with tax regulations.</p>
-        <a href="gst-hst-calculator.html" class="card-link">
-          Open Tool <i class="fas fa-arrow-right"></i>
-        </a>
-      </div>
-    </section>
-
-    <section class="stats-section">
-      <h2>Quick Stats</h2>
-      <div class="stats-grid">
-        <div class="stat-card stat-1">
-          <div class="stat-icon">
-            <i class="fas fa-users"></i>
-          </div>
-          <div class="stat-info">
-            <h3>1,254</h3>
-            <p>Active Users</p>
-          </div>
-        </div>
-        
-        <div class="stat-card stat-2">
-          <div class="stat-icon">
-            <i class="fas fa-check-circle"></i>
-          </div>
-          <div class="stat-info">
-            <h3>89%</h3>
-            <p>Tasks Completed</p>
-          </div>
-        </div>
-        
-        <div class="stat-card stat-3">
-          <div class="stat-icon">
-            <i class="fas fa-chart-bar"></i>
-          </div>
-          <div class="stat-info">
-            <h3>24.5%</h3>
-            <p>Revenue Growth</p>
-          </div>
-        </div>
-        
-        <div class="stat-card stat-4">
-          <div class="stat-icon">
-            <i class="fas fa-comment-dots"></i>
-          </div>
-          <div class="stat-info">
-            <h3>342</h3>
-            <p>New Messages</p>
-          </div>
-        </div>
-      </div>
-    </section>
   </div>
 
-  <footer>
-    <div class="footer-content">
-      <p>&copy; 2025 TK Dashboard. All rights reserved.</p>
-      <div class="footer-links">
-        <a href="#">Privacy Policy</a>
-        <a href="#">Terms of Service</a>
-        <a href="#">Support</a>
-        <a href="#">Contact Us</a>
+  <!-- Dashboard (Hidden until login) -->
+  <div id="dashboard" style="display: none;">
+    <header>
+      <div class="header-content">
+        <div class="logo">
+          <i class="fas fa-tachometer-alt"></i>
+          <div class="logo-text">
+            <h1>TK Dashboard</h1>
+            <p>Access all your TK tools in one place</p>
+          </div>
+        </div>
+        <div class="user-info">
+          <div class="user-avatar">
+            <i class="fas fa-user"></i>
+          </div>
+          <div>
+            <p>Welcome back, <strong id="admin-name">Admin</strong></p>
+          </div>
+          <button id="logout-btn" class="logout-btn">
+            <i class="fas fa-sign-out-alt"></i> Logout
+          </button>
+        </div>
       </div>
+    </header>
+
+    <div class="main-content">
+      <section class="welcome-section">
+        <h2>Welcome to Your Dashboard</h2>
+        <p>Manage your business efficiently with our integrated tools. Everything you need in one centralized location.</p>
+      </section>
+
+      <section class="cards-grid">
+        <div class="card marketing">
+          <div class="card-icon">
+            <i class="fas fa-chart-line"></i>
+          </div>
+          <h3>TK Marketing</h3>
+          <p>Analyze campaign performance, track customer engagement, and optimize your marketing strategies.</p>
+          <a href="Tkmarketing.html" class="card-link">
+            Open Tool <i class="fas fa-arrow-right"></i>
+          </a>
+        </div>
+
+        <div class="card chats">
+          <div class="card-icon">
+            <i class="fas fa-comments"></i>
+          </div>
+          <h3>TK Chats</h3>
+          <p>Communicate with your team and customers through our integrated messaging platform.</p>
+          <a href="Tkchats.html" class="card-link">
+            Open Tool <i class="fas fa-arrow-right"></i>
+          </a>
+        </div>
+
+        <div class="card tasks">
+          <div class="card-icon">
+            <i class="fas fa-tasks"></i>
+          </div>
+          <h3>TK Task Manager</h3>
+          <p>Organize projects, assign tasks, and track progress with our comprehensive task management system.</p>
+          <a href="Tktask_manager.html" class="card-link">
+            Open Tool <i class="fas fa-arrow-right"></i>
+          </a>
+        </div>
+
+        <div class="card accounting">
+          <div class="card-icon">
+            <i class="fas fa-calculator"></i>
+          </div>
+          <h3>TK Accounting Manager</h3>
+          <p>Manage finances, track expenses, and generate financial reports with our accounting tools.</p>
+          <a href="Tkaccounting_manager.html" class="card-link">
+            Open Tool <i class="fas fa-arrow-right"></i>
+          </a>
+        </div>
+
+        <div class="card tax">
+          <div class="card-icon">
+            <i class="fas fa-file-invoice-dollar"></i>
+          </div>
+          <h3>TK Tax Compliance</h3>
+          <p>Calculate GST/HST, prepare tax filings, and ensure compliance with tax regulations.</p>
+          <a href="gst-hst-calculator.html" class="card-link">
+            Open Tool <i class="fas fa-arrow-right"></i>
+          </a>
+        </div>
+      </section>
+
+      <section class="stats-section">
+        <h2>Quick Stats</h2>
+        <div class="stats-grid">
+          <div class="stat-card stat-1">
+            <div class="stat-icon">
+              <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-info">
+              <h3>1,254</h3>
+              <p>Active Users</p>
+            </div>
+          </div>
+          
+          <div class="stat-card stat-2">
+            <div class="stat-icon">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-info">
+              <h3>89%</h3>
+              <p>Tasks Completed</p>
+            </div>
+          </div>
+          
+          <div class="stat-card stat-3">
+            <div class="stat-icon">
+              <i class="fas fa-chart-bar"></i>
+            </div>
+            <div class="stat-info">
+              <h3>24.5%</h3>
+              <p>Revenue Growth</p>
+            </div>
+          </div>
+          
+          <div class="stat-card stat-4">
+            <div class="stat-icon">
+              <i class="fas fa-comment-dots"></i>
+            </div>
+            <div class="stat-info">
+              <h3>342</h3>
+              <p>New Messages</p>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
-  </footer>
+
+    <footer>
+      <div class="footer-content">
+        <p>&copy; 2025 TK Dashboard. All rights reserved.</p>
+        <div class="footer-links">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Service</a>
+          <a href="#">Support</a>
+          <a href="#">Contact Us</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // Admin credentials (in a real application, this would be stored securely on the server)
+    const ADMIN_CREDENTIALS = {
+      username: "admin",
+      password: "admin123"
+    };
+
+    // DOM Elements
+    const loginPage = document.getElementById('login-page');
+    const dashboard = document.getElementById('dashboard');
+    const loginForm = document.getElementById('login-form');
+    const errorMessage = document.getElementById('error-message');
+    const logoutBtn = document.getElementById('logout-btn');
+    const adminName = document.getElementById('admin-name');
+
+    // Check if user is already logged in
+    document.addEventListener('DOMContentLoaded', function() {
+      const isLoggedIn = localStorage.getItem('adminLoggedIn');
+      
+      if (isLoggedIn === 'true') {
+        showDashboard();
+      }
+    });
+
+    // Handle login form submission
+    loginForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      
+      if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+        // Successful login
+        localStorage.setItem('adminLoggedIn', 'true');
+        localStorage.setItem('adminUsername', username);
+        showDashboard();
+      } else {
+        // Failed login
+        errorMessage.style.display = 'block';
+        setTimeout(() => {
+          errorMessage.style.display = 'none';
+        }, 3000);
+      }
+    });
+
+    // Handle logout
+    logoutBtn.addEventListener('click', function() {
+      localStorage.removeItem('adminLoggedIn');
+      localStorage.removeItem('adminUsername');
+      showLoginPage();
+    });
+
+    // Show dashboard function
+    function showDashboard() {
+      loginPage.style.display = 'none';
+      dashboard.style.display = 'block';
+      
+      // Set admin name if available
+      const savedUsername = localStorage.getItem('adminUsername');
+      if (savedUsername) {
+        adminName.textContent = savedUsername.charAt(0).toUpperCase() + savedUsername.slice(1);
+      }
+    }
+
+    // Show login page function
+    function showLoginPage() {
+      loginPage.style.display = 'flex';
+      dashboard.style.display = 'none';
+      loginForm.reset();
+    }
+  </script>
 </body>
 </html>
