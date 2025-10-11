@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TaxMaster Pro | Complete GST/HST & Expense Management</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
     <style>
         :root {
             --primary: #4361ee;
@@ -71,38 +74,6 @@
             opacity: 0.9;
             max-width: 600px;
             margin: 0 auto;
-        }
-
-        .sync-indicator {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.9rem;
-            padding: 8px 15px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            margin-top: 15px;
-        }
-
-        .sync-indicator.synced .dot {
-            background: var(--success);
-        }
-
-        .sync-indicator.syncing .dot {
-            background: var(--warning);
-            animation: pulse 1s infinite;
-        }
-
-        .dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: var(--gray);
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
         }
 
         .dashboard {
@@ -210,11 +181,6 @@
         .btn:hover {
             transform: translateY(-3px);
             box-shadow: 0 7px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
         }
 
         .btn-revenue {
@@ -422,6 +388,12 @@
             background: linear-gradient(90deg, var(--net), #7209b7);
         }
 
+        .chart-container {
+            height: 200px;
+            margin: 20px 0;
+            position: relative;
+        }
+
         .actions {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -464,6 +436,33 @@
 
         .notification i {
             font-size: 1.5rem;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .tab {
+            padding: 12px 25px;
+            cursor: pointer;
+            font-weight: 600;
+            border-bottom: 3px solid transparent;
+            transition: var(--transition);
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom: 3px solid var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
         }
 
         .category-tag {
@@ -538,10 +537,6 @@
         <div class="header">
             <h1><i class="fas fa-calculator"></i> TaxMaster Pro</h1>
             <p>Complete GST/HST Management with Expense Tracking</p>
-            <div class="sync-indicator synced" id="syncIndicator">
-                <div class="dot"></div>
-                <span id="syncText">Cloud Synced</span>
-            </div>
         </div>
 
         <!-- Financial Summary -->
@@ -732,6 +727,55 @@
                 </div>
             </div>
         </div>
+
+        <!-- Submission History Card -->
+        <div class="card">
+            <h2><i class="fas fa-archive"></i> Financial Overview</h2>
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('submissions')">Tax Submissions</div>
+                <div class="tab" onclick="switchTab('analytics')">Analytics</div>
+                <div class="tab" onclick="switchTab('categories')">Expense Categories</div>
+            </div>
+            
+            <div class="tab-content active" id="submissions">
+                <div id="submissionHistory">
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <h3>No Tax Submissions</h3>
+                        <p>Submit your first tax payment to see history here</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="analytics">
+                <div class="chart-container">
+                    <canvas id="taxChart"></canvas>
+                </div>
+                <div class="financial-summary">
+                    <div class="summary-card">
+                        <div><i class="fas fa-money-bill-wave"></i> Total Submitted</div>
+                        <div class="summary-value positive" id="totalSubmitted">$0.00</div>
+                    </div>
+                    <div class="summary-card">
+                        <div><i class="fas fa-calendar-check"></i> Submission Count</div>
+                        <div class="summary-value" id="submissionCount">0</div>
+                    </div>
+                    <div class="summary-card">
+                        <div><i class="fas fa-receipt"></i> Expense Tax Credits</div>
+                        <div class="summary-value tax-credit" id="totalTaxCredits">$0.00</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="categories">
+                <div class="chart-container">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+                <div id="categoryBreakdown">
+                    <!-- Category breakdown will be populated here -->
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="floating-btn" onclick="showQuickReport()">
@@ -746,14 +790,9 @@
         </div>
     </div>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-analytics.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Firebase Configuration
+        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBcuCuqYrySz26d7CoQXZllePzMq3LEyWE",
             authDomain: "tkmachines-945b9.firebaseapp.com",
@@ -765,127 +804,54 @@
         };
 
         // Initialize Firebase
-        const app = firebase.initializeApp(firebaseConfig);
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
         const auth = firebase.auth();
-        const db = firebase.database();
-        const analytics = firebase.getAnalytics(app);
 
-        // Data storage
+        // Initialize data storage
         let revenues = [];
         let expenses = [];
         let submissions = [];
-        let currentUser = null;
+        let taxChart, categoryChart;
 
-        // AUTHENTICATION CHECK - Single instance
-        auth.onAuthStateChanged((user) => {
-            currentUser = user;
-            
-            if (!user) {
-                // User is not logged in, redirect to login page
-                window.location.href = 'index.html';
-                return;
-            }
-            
-            // User is authenticated, initialize app
-            initializeApp();
+        // DOM elements
+        const taxRateSelect = document.getElementById('taxRate');
+        const customRateContainer = document.getElementById('customRateContainer');
+        const expenseTaxRateSelect = document.getElementById('expenseTaxRate');
+        const customExpenseRateContainer = document.getElementById('customExpenseRateContainer');
+        const revenueList = document.getElementById('revenueList');
+        const expenseList = document.getElementById('expenseList');
+        const revenueActions = document.getElementById('revenueActions');
+        const expenseActions = document.getElementById('expenseActions');
+        const notification = document.getElementById('notification');
+
+        // Event listeners
+        taxRateSelect.addEventListener('change', function() {
+            customRateContainer.style.display = this.value === 'custom' ? 'block' : 'none';
         });
 
-        function initializeApp() {
-            // Set default dates
-            document.getElementById('revenueDate').valueAsDate = new Date();
-            document.getElementById('expenseDate').valueAsDate = new Date();
+        expenseTaxRateSelect.addEventListener('change', function() {
+            customExpenseRateContainer.style.display = this.value === 'custom-expense' ? 'block' : 'none';
+        });
 
-            // Load user data from Firebase
-            loadUserData();
+        // Set default dates to today
+        document.getElementById('revenueDate').valueAsDate = new Date();
+        document.getElementById('expenseDate').valueAsDate = new Date();
 
-            // Setup event listeners
-            document.getElementById('taxRate').addEventListener('change', function() {
-                document.getElementById('customRateContainer').style.display = this.value === 'custom' ? 'block' : 'none';
-            });
-
-            document.getElementById('expenseTaxRate').addEventListener('change', function() {
-                document.getElementById('customExpenseRateContainer').style.display = this.value === 'custom-expense' ? 'block' : 'none';
-            });
-        }
-
-        function loadUserData() {
-            updateSyncStatus('syncing');
-            const userId = currentUser.uid;
-            
-            // Load revenues
-            db.ref(`users/${userId}/revenues`).on('value', (snapshot) => {
-                revenues = snapshot.val() ? Object.values(snapshot.val()) : [];
-                updateDisplay();
-                updateSyncStatus('synced');
-            });
-
-            // Load expenses
-            db.ref(`users/${userId}/expenses`).on('value', (snapshot) => {
-                expenses = snapshot.val() ? Object.values(snapshot.val()) : [];
-                updateDisplay();
-                updateSyncStatus('synced');
-            });
-
-            // Load submissions
-            db.ref(`users/${userId}/submissions`).on('value', (snapshot) => {
-                submissions = snapshot.val() ? Object.values(snapshot.val()) : [];
-                updateDisplay();
-                updateSyncStatus('synced');
-            });
-        }
-
-        function updateSyncStatus(status) {
-            const indicator = document.getElementById('syncIndicator');
-            const text = document.getElementById('syncText');
-            
-            indicator.classList.remove('syncing', 'synced');
-            if (status === 'syncing') {
-                indicator.classList.add('syncing');
-                text.textContent = 'Syncing...';
-            } else {
-                indicator.classList.add('synced');
-                text.textContent = 'Cloud Synced';
-            }
-        }
-
-        function saveData() {
-            if (!currentUser) return;
-            
-            updateSyncStatus('syncing');
-            const userId = currentUser.uid;
-            
-            const updates = {};
-            updates[`users/${userId}/revenues`] = revenues.reduce((acc, rev) => {
-                acc[rev.id] = rev;
-                return acc;
-            }, {});
-            updates[`users/${userId}/expenses`] = expenses.reduce((acc, exp) => {
-                acc[exp.id] = exp;
-                return acc;
-            }, {});
-            updates[`users/${userId}/submissions`] = submissions.reduce((acc, sub) => {
-                acc[sub.id] = sub;
-                return acc;
-            }, {});
-
-            db.ref().update(updates).then(() => {
-                updateSyncStatus('synced');
-            }).catch(err => {
-                console.error('Sync error:', err);
-                updateSyncStatus('synced');
-            });
-        }
+        // Initialize the display
+        updateDisplay();
+        initCharts();
 
         function getTaxRate(isExpense = false) {
             if (isExpense) {
-                const selectedRate = document.getElementById('expenseTaxRate').value;
+                const selectedRate = expenseTaxRateSelect.value;
                 if (selectedRate === 'custom-expense') {
                     const customRate = parseFloat(document.getElementById('customExpenseTaxRate').value) || 0;
                     return customRate / 100;
                 }
                 return parseFloat(selectedRate);
             } else {
-                const selectedRate = document.getElementById('taxRate').value;
+                const selectedRate = taxRateSelect.value;
                 if (selectedRate === 'custom') {
                     const customRate = parseFloat(document.getElementById('customTaxRate').value) || 0;
                     return customRate / 100;
@@ -909,22 +875,28 @@
             const totalAmount = amount + taxAmount;
 
             const revenue = {
-                id: Date.now().toString(),
                 date: date,
                 description: description,
                 amount: amount,
                 taxRate: taxRate,
                 taxAmount: taxAmount,
                 totalAmount: totalAmount,
-                type: 'revenue'
+                type: 'revenue',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
             };
 
-            revenues.push(revenue);
-            saveData();
-            updateDisplay();
-            document.getElementById('revenueDescription').value = '';
-            document.getElementById('revenueAmount').value = '';
-            showNotification('Revenue entry added successfully!');
+            // Save to Firebase
+            db.collection('revenues').add(revenue)
+                .then((docRef) => {
+                    revenue.id = docRef.id;
+                    revenues.push(revenue);
+                    updateDisplay();
+                    clearRevenueForm();
+                    showNotification('Revenue entry added successfully!');
+                })
+                .catch((error) => {
+                    showNotification('Error adding revenue: ' + error.message, 'error');
+                });
         }
 
         function addExpense() {
@@ -944,7 +916,6 @@
             const taxCredit = taxAmount;
 
             const expense = {
-                id: Date.now().toString(),
                 date: date,
                 description: description,
                 amount: amount,
@@ -953,48 +924,89 @@
                 taxAmount: taxAmount,
                 taxCredit: taxCredit,
                 totalAmount: totalAmount,
-                type: 'expense'
+                type: 'expense',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
             };
 
-            expenses.push(expense);
-            saveData();
-            updateDisplay();
-            document.getElementById('expenseDescription').value = '';
-            document.getElementById('expenseAmount').value = '';
-            showNotification('Expense entry added successfully!');
+            // Save to Firebase
+            db.collection('expenses').add(expense)
+                .then((docRef) => {
+                    expense.id = docRef.id;
+                    expenses.push(expense);
+                    updateDisplay();
+                    clearExpenseForm();
+                    showNotification('Expense entry added successfully!');
+                })
+                .catch((error) => {
+                    showNotification('Error adding expense: ' + error.message, 'error');
+                });
         }
 
         function deleteRevenue(id) {
-            revenues = revenues.filter(revenue => revenue.id !== id);
-            saveData();
-            updateDisplay();
-            showNotification('Revenue entry deleted.');
+            db.collection('revenues').doc(id).delete()
+                .then(() => {
+                    revenues = revenues.filter(revenue => revenue.id !== id);
+                    updateDisplay();
+                    showNotification('Revenue entry deleted.');
+                })
+                .catch((error) => {
+                    showNotification('Error deleting revenue: ' + error.message, 'error');
+                });
         }
 
         function deleteExpense(id) {
-            expenses = expenses.filter(expense => expense.id !== id);
-            saveData();
-            updateDisplay();
-            showNotification('Expense entry deleted.');
+            db.collection('expenses').doc(id).delete()
+                .then(() => {
+                    expenses = expenses.filter(expense => expense.id !== id);
+                    updateDisplay();
+                    showNotification('Expense entry deleted.');
+                })
+                .catch((error) => {
+                    showNotification('Error deleting expense: ' + error.message, 'error');
+                });
         }
 
         function clearAllRevenue() {
             if (revenues.length === 0) return;
+            
             if (confirm('Are you sure you want to delete all revenue entries? This action cannot be undone.')) {
-                revenues = [];
-                saveData();
-                updateDisplay();
-                showNotification('All revenue entries cleared.');
+                const batch = db.batch();
+                revenues.forEach(revenue => {
+                    const docRef = db.collection('revenues').doc(revenue.id);
+                    batch.delete(docRef);
+                });
+                
+                batch.commit()
+                    .then(() => {
+                        revenues = [];
+                        updateDisplay();
+                        showNotification('All revenue entries cleared.');
+                    })
+                    .catch((error) => {
+                        showNotification('Error clearing revenues: ' + error.message, 'error');
+                    });
             }
         }
 
         function clearAllExpenses() {
             if (expenses.length === 0) return;
+            
             if (confirm('Are you sure you want to delete all expense entries? This action cannot be undone.')) {
-                expenses = [];
-                saveData();
-                updateDisplay();
-                showNotification('All expense entries cleared.');
+                const batch = db.batch();
+                expenses.forEach(expense => {
+                    const docRef = db.collection('expenses').doc(expense.id);
+                    batch.delete(docRef);
+                });
+                
+                batch.commit()
+                    .then(() => {
+                        expenses = [];
+                        updateDisplay();
+                        showNotification('All expense entries cleared.');
+                    })
+                    .catch((error) => {
+                        showNotification('Error clearing expenses: ' + error.message, 'error');
+                    });
             }
         }
 
@@ -1007,25 +1019,32 @@
             }
 
             const submission = {
-                id: Date.now().toString(),
                 date: new Date().toISOString().split('T')[0],
                 amount: netTax,
                 revenueCount: revenues.length,
                 expenseCount: expenses.length,
                 totalRevenue: calculateTotalRevenue(),
                 totalExpenses: calculateTotalExpenses(),
-                netIncome: calculateNetIncome()
+                netIncome: calculateNetIncome(),
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
             };
 
-            submissions.unshift(submission);
-            saveData();
-            updateDisplay();
+            db.collection('submissions').add(submission)
+                .then((docRef) => {
+                    submission.id = docRef.id;
+                    submissions.unshift(submission);
+                    updateDisplay();
+                    updateCharts();
 
-            const message = netTax >= 0 ? 
-                `Tax payment of ${netTax.toFixed(2)} submitted successfully!` :
-                `Tax refund of ${Math.abs(netTax).toFixed(2)} processed successfully!`;
-                
-            showNotification(message);
+                    const message = netTax >= 0 ? 
+                        `Tax payment of $${netTax.toFixed(2)} submitted successfully!` :
+                        `Tax refund of $${Math.abs(netTax).toFixed(2)} processed successfully!`;
+                        
+                    showNotification(message);
+                })
+                .catch((error) => {
+                    showNotification('Error submitting tax: ' + error.message, 'error');
+                });
         }
 
         function calculateTotalRevenue() {
@@ -1056,13 +1075,11 @@
             updateRevenueList();
             updateExpenseList();
             updateFinancialSummary();
+            updateSubmissionHistory();
             updateProgressBars();
         }
 
         function updateRevenueList() {
-            const revenueList = document.getElementById('revenueList');
-            const revenueActions = document.getElementById('revenueActions');
-            
             if (revenues.length === 0) {
                 revenueList.innerHTML = `
                     <div class="empty-state">
@@ -1085,8 +1102,8 @@
                         </div>
                     </div>
                     <div style="text-align: right;">
-                        <div class="transaction-amount">${revenue.amount.toFixed(2)}</div>
-                        <div class="revenue-tax">Tax: ${revenue.taxAmount.toFixed(2)}</div>
+                        <div class="transaction-amount">$${revenue.amount.toFixed(2)}</div>
+                        <div class="revenue-tax">Tax: $${revenue.taxAmount.toFixed(2)}</div>
                     </div>
                     <button class="delete-btn" onclick="deleteRevenue('${revenue.id}')">
                         <i class="fas fa-times"></i>
@@ -1096,9 +1113,6 @@
         }
 
         function updateExpenseList() {
-            const expenseList = document.getElementById('expenseList');
-            const expenseActions = document.getElementById('expenseActions');
-            
             if (expenses.length === 0) {
                 expenseList.innerHTML = `
                     <div class="empty-state">
@@ -1122,8 +1136,8 @@
                         </div>
                     </div>
                     <div style="text-align: right;">
-                        <div class="transaction-amount">${expense.amount.toFixed(2)}</div>
-                        ${expense.taxCredit > 0 ? `<div class="expense-tax tax-credit">Credit: ${expense.taxCredit.toFixed(2)}</div>` : ''}
+                        <div class="transaction-amount">$${expense.amount.toFixed(2)}</div>
+                        ${expense.taxCredit > 0 ? `<div class="expense-tax tax-credit">Credit: $${expense.taxCredit.toFixed(2)}</div>` : ''}
                     </div>
                     <button class="delete-btn" onclick="deleteExpense('${expense.id}')">
                         <i class="fas fa-times"></i>
@@ -1152,10 +1166,12 @@
             const netIncome = calculateNetIncome();
             const netTax = calculateNetTax();
 
-            document.getElementById('totalRevenue').textContent = `${totalRevenue.toFixed(2)}`;
-            document.getElementById('totalExpenses').textContent = `${totalExpenses.toFixed(2)}`;
-            document.getElementById('netIncome').textContent = `${netIncome.toFixed(2)}`;
-            document.getElementById('totalTax').textContent = `${netTax.toFixed(2)}`;
+            document.getElementById('totalRevenue').textContent = `$${totalRevenue.toFixed(2)}`;
+            document.getElementById('totalExpenses').textContent = `$${totalExpenses.toFixed(2)}`;
+            document.getElementById('netIncome').textContent = `$${netIncome.toFixed(2)}`;
+            document.getElementById('totalTax').textContent = `$${netTax.toFixed(2)}`;
+
+            document.getElementById('totalTaxCredits').textContent = `$${calculateExpenseTaxCredits().toFixed(2)}`;
         }
 
         function updateProgressBars() {
@@ -1174,6 +1190,50 @@
             document.getElementById('revenueProgressPercent').textContent = `${Math.round(revenueProgress)}%`;
             document.getElementById('expenseProgressPercent').textContent = `${Math.round(expenseProgress)}%`;
             document.getElementById('netProgressPercent').textContent = `${Math.round(netProgress)}%`;
+        }
+
+        function updateSubmissionHistory() {
+            if (submissions.length === 0) {
+                document.getElementById('submissionHistory').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <h3>No Tax Submissions</h3>
+                        <p>Submit your first tax payment to see history here</p>
+                    </div>`;
+                return;
+            }
+
+            document.getElementById('submissionHistory').innerHTML = submissions.map(submission => `
+                <div class="transaction-item">
+                    <div class="transaction-info">
+                        <strong>Tax Submission #${submission.id ? submission.id.slice(-4) : '0000'}</strong>
+                        <div class="transaction-meta">
+                            <span><i class="far fa-calendar"></i> ${submission.date}</span>
+                            <span><i class="fas fa-receipt"></i> ${submission.revenueCount} revenue entries</span>
+                            <span><i class="fas fa-file-invoice-dollar"></i> ${submission.expenseCount} expense entries</span>
+                        </div>
+                    </div>
+                    <div class="transaction-amount ${submission.amount >= 0 ? 'revenue-amount' : 'expense-amount'}">
+                        ${submission.amount >= 0 ? 'Paid: ' : 'Refund: '}$${Math.abs(submission.amount).toFixed(2)}
+                    </div>
+                </div>
+            `).join('');
+            
+            const totalSubmitted = submissions.reduce((total, sub) => total + (sub.amount > 0 ? sub.amount : 0), 0);
+            document.getElementById('totalSubmitted').textContent = `$${totalSubmitted.toFixed(2)}`;
+            document.getElementById('submissionCount').textContent = submissions.length;
+        }
+
+        function clearRevenueForm() {
+            document.getElementById('revenueDescription').value = '';
+            document.getElementById('revenueAmount').value = '';
+            document.getElementById('revenueDate').valueAsDate = new Date();
+        }
+
+        function clearExpenseForm() {
+            document.getElementById('expenseDescription').value = '';
+            document.getElementById('expenseAmount').value = '';
+            document.getElementById('expenseDate').valueAsDate = new Date();
         }
 
         function exportData() {
@@ -1197,7 +1257,7 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `taxmaster-data-${new Date().toISOString().split('T')[0]}.json`;
+            a.download = `taxmaster-complete-data-${new Date().toISOString().split('T')[0]}.json`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -1234,6 +1294,141 @@
             }, 4000);
         }
 
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabName).classList.add('active');
+            
+            if (tabName === 'analytics') {
+                updateCharts();
+            } else if (tabName === 'categories') {
+                updateCategoryChart();
+                updateCategoryBreakdown();
+            }
+        }
+
+        function initCharts() {
+            const ctx = document.getElementById('taxChart').getContext('2d');
+            taxChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Tax Amount',
+                        data: [],
+                        backgroundColor: 'rgba(67, 97, 238, 0.7)',
+                        borderColor: 'rgba(67, 97, 238, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const ctx2 = document.getElementById('categoryChart').getContext('2d');
+            categoryChart = new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: [
+                            '#4361ee', '#7209b7', '#f72585', '#4cc9f0',
+                            '#f8961e', '#38b000', '#4895ef', '#3a0ca3'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                }
+            });
+        }
+
+        function updateCharts() {
+            if (!taxChart) return;
+            
+            const recentSubmissions = submissions.slice(0, 6).reverse();
+            
+            taxChart.data.labels = recentSubmissions.map(sub => 
+                new Date(sub.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+            );
+            taxChart.data.datasets[0].data = recentSubmissions.map(sub => Math.abs(sub.amount));
+            taxChart.update();
+        }
+
+        function updateCategoryChart() {
+            if (!categoryChart) return;
+            
+            const categories = {};
+            expenses.forEach(expense => {
+                if (!categories[expense.category]) {
+                    categories[expense.category] = 0;
+                }
+                categories[expense.category] += expense.amount;
+            });
+            
+            categoryChart.data.labels = Object.keys(categories).map(getCategoryName);
+            categoryChart.data.datasets[0].data = Object.values(categories);
+            categoryChart.update();
+        }
+
+        function updateCategoryBreakdown() {
+            const categories = {};
+            expenses.forEach(expense => {
+                if (!categories[expense.category]) {
+                    categories[expense.category] = {
+                        count: 0,
+                        total: 0,
+                        taxCredits: 0
+                    };
+                }
+                categories[expense.category].count++;
+                categories[expense.category].total += expense.amount;
+                categories[expense.category].taxCredits += expense.taxCredit;
+            });
+            
+            const breakdownEl = document.getElementById('categoryBreakdown');
+            if (Object.keys(categories).length === 0) {
+                breakdownEl.innerHTML = '<div class="empty-state"><i class="fas fa-folder-open"></i><h3>No Expenses by Category</h3><p>Add expenses to see category breakdown</p></div>';
+                return;
+            }
+            
+            breakdownEl.innerHTML = Object.entries(categories).map(([category, data]) => `
+                <div class="transaction-item">
+                    <div class="transaction-info">
+                        <strong>${getCategoryName(category)}</strong>
+                        <div class="transaction-meta">
+                            <span>${data.count} entries</span>
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div class="transaction-amount">$${data.total.toFixed(2)}</div>
+                        ${data.taxCredits > 0 ? `<div class="tax-credit">Credits: $${data.taxCredits.toFixed(2)}</div>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
         function showQuickReport() {
             const totalRevenue = calculateTotalRevenue();
             const totalExpenses = calculateTotalExpenses();
@@ -1243,19 +1438,54 @@
             const report = `
 TAXMASTER QUICK REPORT
 =======================
-Total Revenue: ${totalRevenue.toFixed(2)}
-Total Expenses: ${totalExpenses.toFixed(2)}
-Net Income: ${netIncome.toFixed(2)}
-Net Tax: ${netTax.toFixed(2)}
+Total Revenue: $${totalRevenue.toFixed(2)}
+Total Expenses: $${totalExpenses.toFixed(2)}
+Net Income: $${netIncome.toFixed(2)}
+Net Tax: $${netTax.toFixed(2)}
 Revenue Entries: ${revenues.length}
 Expense Entries: ${expenses.length}
 Tax Submissions: ${submissions.length}
-Data Source: Cloud Synced
 Generated: ${new Date().toLocaleDateString()}
             `;
             
             alert(report);
         }
+
+        // Load initial data from Firebase
+        function loadInitialData() {
+            // Load revenues
+            db.collection('revenues').orderBy('createdAt', 'desc').get()
+                .then((querySnapshot) => {
+                    revenues = [];
+                    querySnapshot.forEach((doc) => {
+                        revenues.push({ id: doc.id, ...doc.data() });
+                    });
+                    updateDisplay();
+                });
+
+            // Load expenses
+            db.collection('expenses').orderBy('createdAt', 'desc').get()
+                .then((querySnapshot) => {
+                    expenses = [];
+                    querySnapshot.forEach((doc) => {
+                        expenses.push({ id: doc.id, ...doc.data() });
+                    });
+                    updateDisplay();
+                });
+
+            // Load submissions
+            db.collection('submissions').orderBy('createdAt', 'desc').get()
+                .then((querySnapshot) => {
+                    submissions = [];
+                    querySnapshot.forEach((doc) => {
+                        submissions.push({ id: doc.id, ...doc.data() });
+                    });
+                    updateDisplay();
+                });
+        }
+
+        // Call this when the page loads
+        loadInitialData();
     </script>
 </body>
 </html>
