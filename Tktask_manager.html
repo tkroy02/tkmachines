@@ -14,10 +14,49 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
-    <!-- Firebase SDK - Using the stable version -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-analytics.js"></script>
+    <!-- Firebase SDK v9 Modular -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
+        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, where, orderBy, serverTimestamp, writeBatch } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+        import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
+        import { getAnalytics } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics.js';
+
+        // Your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBcuCuqYrySz26d7CoQXZllePzMq3LEyWE",
+            authDomain: "tkmachines-945b9.firebaseapp.com",
+            projectId: "tkmachines-945b9",
+            storageBucket: "tkmachines-945b9.firebasestorage.app",
+            messagingSenderId: "137087394703",
+            appId: "1:137087394703:web:81c3383fd6ee961ef3e1fa",
+            measurementId: "G-Y8GH34Q2FN"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const analytics = getAnalytics(app);
+
+        // Make Firebase available globally for React component
+        window.firebaseModules = {
+            db,
+            auth,
+            collection,
+            addDoc,
+            updateDoc,
+            deleteDoc,
+            doc,
+            onSnapshot,
+            query,
+            where,
+            orderBy,
+            serverTimestamp,
+            writeBatch,
+            onAuthStateChanged,
+            signOut
+        };
+    </script>
     
     <style>
         .task-completed {
@@ -62,91 +101,92 @@
             const [loading, setLoading] = useState(false);
             const [firebaseInitialized, setFirebaseInitialized] = useState(false);
             const [syncStatus, setSyncStatus] = useState('idle');
+            const [user, setUser] = useState(null);
             const rootRef = useRef(null);
 
-            // Initialize Firebase on component mount
+            // Initialize Firebase and authentication
             useEffect(() => {
-                try {
-                    // Your Firebase configuration
-                    const firebaseConfig = {
-                        apiKey: "AIzaSyBcuCuqYrySz26d7CoQXZllePzMq3LEyWE",
-                        authDomain: "tkmachines-945b9.firebaseapp.com",
-                        projectId: "tkmachines-945b9",
-                        storageBucket: "tkmachines-945b9.firebasestorage.app",
-                        messagingSenderId: "137087394703",
-                        appId: "1:137087394703:web:81c3383fd6ee961ef3e1fa",
-                        measurementId: "G-Y8GH34Q2FN"
-                    };
+                const checkFirebase = () => {
+                    if (window.firebaseModules) {
+                        const { auth, onAuthStateChanged } = window.firebaseModules;
+                        
+                        setFirebaseInitialized(true);
+                        console.log("Firebase v9 initialized successfully");
 
-                    // Initialize Firebase
-                    firebase.initializeApp(firebaseConfig);
-                    
-                    // Initialize Analytics (optional)
-                    firebase.analytics();
-                    
-                    setFirebaseInitialized(true);
-                    console.log("Firebase initialized successfully");
+                        // Set up auth state listener
+                        onAuthStateChanged(auth, (currentUser) => {
+                            if (currentUser) {
+                                setUser(currentUser);
+                                console.log("User is authenticated:", currentUser.email);
+                            } else {
+                                // User is not logged in, redirect to login page
+                                console.log("User not authenticated, redirecting to login...");
+                                window.location.href = 'index.html';
+                                return;
+                            }
+                        });
+                    } else {
+                        // Firebase not loaded yet, check again
+                        setTimeout(checkFirebase, 100);
+                    }
+                };
 
-                    // ADD THIS AUTHENTICATION CHECK
-auth.onAuthStateChanged(function(user) {
-    if (!user) {
-        // User is not logged in, redirect to login page
-        window.location.href = 'index.html';
-    }
-});
-                    
-                    // Load initial data from localStorage as fallback
-                    const savedTasks = localStorage.getItem('tasks');
-                    if (savedTasks) {
-                        setTasks(JSON.parse(savedTasks));
-                    }
-                    
-                } catch (error) {
-                    console.error("Firebase initialization error:", error);
-                    // Load from localStorage if Firebase fails
-                    const savedTasks = localStorage.getItem('tasks');
-                    if (savedTasks) {
-                        setTasks(JSON.parse(savedTasks));
-                    }
+                checkFirebase();
+
+                // Load initial data from localStorage as fallback
+                const savedTasks = localStorage.getItem('tasks');
+                if (savedTasks) {
+                    setTasks(JSON.parse(savedTasks));
                 }
             }, []);
 
-            // Set up real-time Firestore listener
+            // Set up real-time Firestore listener - ONLY when user is authenticated
             useEffect(() => {
-                if (!firebaseInitialized) return;
+                if (!user || !window.firebaseModules) return;
 
-                const db = firebase.firestore();
+                const { 
+                    db, 
+                    collection, 
+                    onSnapshot, 
+                    query, 
+                    where, 
+                    orderBy 
+                } = window.firebaseModules;
+
+                const tasksQuery = query(
+                    collection(db, "tasks"),
+                    where("userId", "==", user.uid),
+                    orderBy("createdAt", "desc")
+                );
                 
-                const unsubscribe = db.collection("tasks")
-                    .orderBy("createdAt", "desc")
-                    .onSnapshot(
-                        (snapshot) => {
-                            const tasksArray = [];
-                            snapshot.forEach((doc) => {
-                                const data = doc.data();
-                                tasksArray.push({ 
-                                    id: doc.id, 
-                                    ...data,
-                                    // Handle Firebase timestamp conversion
-                                    createdAt: data.createdAt ? data.createdAt.toDate().toLocaleDateString() : new Date().toLocaleDateString()
-                                });
+                const unsubscribe = onSnapshot(
+                    tasksQuery,
+                    (snapshot) => {
+                        const tasksArray = [];
+                        snapshot.forEach((doc) => {
+                            const data = doc.data();
+                            tasksArray.push({ 
+                                id: doc.id, 
+                                ...data,
+                                createdAt: data.createdAt ? data.createdAt.toDate().toLocaleDateString() : new Date().toLocaleDateString()
                             });
-                            setTasks(tasksArray);
-                            setSyncStatus('synced');
-                        },
-                        (error) => {
-                            console.error("Error fetching tasks:", error);
-                            setSyncStatus('error');
-                            // Fallback to localStorage
-                            const savedTasks = localStorage.getItem('tasks');
-                            if (savedTasks) {
-                                setTasks(JSON.parse(savedTasks));
-                            }
+                        });
+                        setTasks(tasksArray);
+                        setSyncStatus('synced');
+                    },
+                    (error) => {
+                        console.error("Error fetching tasks:", error);
+                        setSyncStatus('error');
+                        // Fallback to localStorage
+                        const savedTasks = localStorage.getItem('tasks');
+                        if (savedTasks) {
+                            setTasks(JSON.parse(savedTasks));
                         }
-                    );
+                    }
+                );
 
                 return () => unsubscribe();
-            }, [firebaseInitialized]);
+            }, [user]);
 
             // Save to localStorage as backup whenever tasks change
             useEffect(() => {
@@ -155,7 +195,7 @@ auth.onAuthStateChanged(function(user) {
 
             const addTask = async (e) => {
                 e.preventDefault();
-                if (!title.trim()) return;
+                if (!title.trim() || !window.firebaseModules) return;
 
                 setLoading(true);
                 setSyncStatus('syncing');
@@ -164,12 +204,13 @@ auth.onAuthStateChanged(function(user) {
                     title: title.trim(),
                     description: description.trim(),
                     completed: false,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    userId: user.uid,
+                    createdAt: window.firebaseModules.serverTimestamp()
                 };
 
                 try {
-                    const db = firebase.firestore();
-                    await db.collection("tasks").add(newTask);
+                    const { db, collection, addDoc } = window.firebaseModules;
+                    await addDoc(collection(db, "tasks"), newTask);
                     setTitle('');
                     setDescription('');
                     setSyncStatus('synced');
@@ -191,12 +232,14 @@ auth.onAuthStateChanged(function(user) {
             };
 
             const deleteTask = async (id) => {
+                if (!window.firebaseModules) return;
+
                 setLoading(true);
                 setSyncStatus('syncing');
 
                 try {
-                    const db = firebase.firestore();
-                    await db.collection("tasks").doc(id).delete();
+                    const { db, doc, deleteDoc } = window.firebaseModules;
+                    await deleteDoc(doc(db, "tasks", id));
                     setSyncStatus('synced');
                 } catch (error) {
                     console.error("Error deleting task:", error);
@@ -209,6 +252,8 @@ auth.onAuthStateChanged(function(user) {
             };
 
             const toggleComplete = async (id) => {
+                if (!window.firebaseModules) return;
+
                 setLoading(true);
                 setSyncStatus('syncing');
 
@@ -216,8 +261,8 @@ auth.onAuthStateChanged(function(user) {
                 const updatedStatus = !taskToUpdate.completed;
 
                 try {
-                    const db = firebase.firestore();
-                    await db.collection("tasks").doc(id).update({
+                    const { db, doc, updateDoc } = window.firebaseModules;
+                    await updateDoc(doc(db, "tasks", id), {
                         completed: updatedStatus
                     });
                     setSyncStatus('synced');
@@ -246,14 +291,14 @@ auth.onAuthStateChanged(function(user) {
             };
 
             const saveEdit = async () => {
-                if (!editTitle.trim()) return;
+                if (!editTitle.trim() || !window.firebaseModules) return;
 
                 setLoading(true);
                 setSyncStatus('syncing');
 
                 try {
-                    const db = firebase.firestore();
-                    await db.collection("tasks").doc(editingId).update({
+                    const { db, doc, updateDoc } = window.firebaseModules;
+                    await updateDoc(doc(db, "tasks", editingId), {
                         title: editTitle.trim(),
                         description: editDescription.trim()
                     });
@@ -276,17 +321,17 @@ auth.onAuthStateChanged(function(user) {
 
             const clearCompleted = async () => {
                 const completedTasks = tasks.filter(task => task.completed);
-                if (completedTasks.length === 0) return;
+                if (completedTasks.length === 0 || !window.firebaseModules) return;
 
                 setLoading(true);
                 setSyncStatus('syncing');
 
                 try {
-                    const db = firebase.firestore();
-                    const batch = db.batch();
+                    const { db, doc, writeBatch } = window.firebaseModules;
+                    const batch = writeBatch(db);
                     
                     completedTasks.forEach(task => {
-                        const taskRef = db.collection("tasks").doc(task.id);
+                        const taskRef = doc(db, "tasks", task.id);
                         batch.delete(taskRef);
                     });
                     
@@ -302,6 +347,18 @@ auth.onAuthStateChanged(function(user) {
                 }
             };
 
+            const logout = async () => {
+                if (!window.firebaseModules) return;
+                
+                try {
+                    const { auth, signOut } = window.firebaseModules;
+                    await signOut(auth);
+                    window.location.href = 'index.html';
+                } catch (error) {
+                    console.error("Error signing out:", error);
+                }
+            };
+
             const filteredTasks = tasks.filter(task => {
                 if (filter === 'active') return !task.completed;
                 if (filter === 'completed') return task.completed;
@@ -313,6 +370,8 @@ auth.onAuthStateChanged(function(user) {
 
             // Status message based on sync state
             const getStatusMessage = () => {
+                if (!window.firebaseModules) return "Loading Firebase...";
+                if (!user) return "Checking authentication...";
                 if (!firebaseInitialized) return "Initializing Firebase...";
                 if (syncStatus === 'syncing') return "Syncing with cloud...";
                 if (syncStatus === 'error') return "Sync error - using local storage";
@@ -322,9 +381,16 @@ auth.onAuthStateChanged(function(user) {
 
             return (
                 <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-100 py-8 px-4">
-                    <div className="max-w-2xl mx-auto">
+                    <div className="max-w-2xl mx-auto relative">
                         {/* Header */}
                         <div className="text-center mb-8">
+                            <button
+                                onClick={logout}
+                                className="absolute top-0 right-0 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition duration-200 flex items-center justify-center"
+                            >
+                                <i className="fas fa-sign-out-alt mr-2"></i>Logout
+                            </button>
+                            
                             <h1 className="text-4xl font-bold text-gray-800 mb-2">
                                 <i className="fas fa-tasks text-blue-500 mr-3"></i>
                                 Task Manager
@@ -332,6 +398,8 @@ auth.onAuthStateChanged(function(user) {
                             <div className="flex items-center justify-center gap-2 text-sm">
                                 {syncStatus === 'syncing' && <div className="loading"></div>}
                                 <span className={`px-3 py-1 rounded-full ${
+                                    !window.firebaseModules ? 'bg-yellow-100 text-yellow-800' :
+                                    !user ? 'bg-yellow-100 text-yellow-800' :
                                     !firebaseInitialized ? 'bg-yellow-100 text-yellow-800' :
                                     syncStatus === 'error' ? 'bg-red-100 text-red-800' :
                                     syncStatus === 'syncing' ? 'bg-blue-100 text-blue-800' :
@@ -340,6 +408,11 @@ auth.onAuthStateChanged(function(user) {
                                     {getStatusMessage()}
                                 </span>
                             </div>
+                            {user && (
+                                <p className="text-sm text-gray-600 mt-2">
+                                    Welcome, {user.email}
+                                </p>
+                            )}
                         </div>
 
                         {/* Stats Cards */}
@@ -416,7 +489,7 @@ auth.onAuthStateChanged(function(user) {
                                         <button
                                             type="submit"
                                             className="w-full bg-blue-500 text-white py-3 px-4 rounded-lg hover:bg-blue-600 transition duration-200 font-semibold disabled:opacity-50 flex items-center justify-center"
-                                            disabled={loading}
+                                            disabled={loading || !user}
                                         >
                                             {loading ? <div className="loading mr-2"></div> : <i className="fas fa-plus mr-2"></i>}
                                             Add Task
@@ -582,7 +655,7 @@ auth.onAuthStateChanged(function(user) {
 
                         {/* Footer */}
                         <div className="text-center mt-8 text-gray-500 text-sm">
-                            <p>Built with React 18 and Firebase Firestore</p>
+                            <p>Built with React 18 and Firebase v9</p>
                             <p>Tasks automatically sync to the cloud and persist locally</p>
                         </div>
                     </div>
