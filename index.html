@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TK Dashboard</title>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     /* Reset and base styles */
     * {
@@ -14,99 +15,518 @@
       font-family: 'Roboto', sans-serif;
     }
 
+    :root {
+      --primary: #3a86ff;
+      --primary-dark: #2667cc;
+      --secondary: #8338ec;
+      --success: #06d6a0;
+      --warning: #ffd166;
+      --danger: #ef476f;
+      --dark: #1a1a2e;
+      --light: #f8f9fa;
+      --gray: #6c757d;
+      --border-radius: 12px;
+      --box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+      --transition: all 0.3s ease;
+    }
+
     body {
       display: flex;
       flex-direction: column;
       min-height: 100vh;
-      background: #f4f7f9;
-      color: #333;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+      color: var(--dark);
+      line-height: 1.6;
     }
 
     /* Header */
     header {
-      background-color: #0d6efd;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
       color: white;
-      padding: 20px 40px;
-      text-align: center;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      padding: 25px 40px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      position: relative;
+      overflow: hidden;
     }
 
-    header h1 {
-      font-size: 2rem;
+    header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0,0 L100,0 L100,100 Z" fill="rgba(255,255,255,0.1)"/></svg>');
+      background-size: cover;
+    }
+
+    .header-content {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .logo i {
+      font-size: 2.5rem;
+      background: rgba(255,255,255,0.2);
+      padding: 12px;
+      border-radius: 50%;
+    }
+
+    .logo-text h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
       margin-bottom: 5px;
     }
 
-    header p {
+    .logo-text p {
       font-size: 1rem;
       opacity: 0.9;
+      font-weight: 300;
     }
 
-    /* Navigation */
-    nav {
-      margin: 40px auto;
+    .user-info {
       display: flex;
-      flex-wrap: wrap;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .user-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      display: flex;
+      align-items: center;
       justify-content: center;
+      font-size: 1.5rem;
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      padding: 40px;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .welcome-section {
+      margin-bottom: 40px;
+      text-align: center;
+    }
+
+    .welcome-section h2 {
+      font-size: 1.8rem;
+      margin-bottom: 10px;
+      color: var(--dark);
+    }
+
+    .welcome-section p {
+      color: var(--gray);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Navigation Cards */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
       gap: 30px;
+      margin-bottom: 40px;
     }
 
-    nav a {
-      background-color: #ffffff;
-      padding: 20px 40px;
-      text-decoration: none;
-      color: #0d6efd;
-      font-size: 1.2rem;
-      border-radius: 10px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-      transition: all 0.3s ease;
+    .card {
+      background: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      padding: 30px;
+      transition: var(--transition);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
     }
 
-    nav a:hover {
-      background-color: #0d6efd;
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 5px;
+      height: 100%;
+      background: var(--primary);
+      transition: var(--transition);
+    }
+
+    .card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 15px 30px rgba(0,0,0,0.12);
+    }
+
+    .card:hover::before {
+      width: 8px;
+    }
+
+    .card-icon {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      font-size: 1.8rem;
       color: white;
+    }
+
+    .marketing .card-icon {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    }
+
+    .chats .card-icon {
+      background: linear-gradient(135deg, var(--success) 0%, #05b387 100%);
+    }
+
+    .tasks .card-icon {
+      background: linear-gradient(135deg, var(--warning) 0%, #ffc043 100%);
+    }
+
+    .accounting .card-icon {
+      background: linear-gradient(135deg, var(--secondary) 0%, #7229d9 100%);
+    }
+
+    .tax .card-icon {
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+    }
+
+    .card h3 {
+      font-size: 1.5rem;
+      margin-bottom: 15px;
+      color: var(--dark);
+    }
+
+    .card p {
+      color: var(--gray);
+      margin-bottom: 20px;
+      flex-grow: 1;
+    }
+
+    .card-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+      transition: var(--transition);
+      align-self: flex-start;
+    }
+
+    .card-link:hover {
+      gap: 12px;
+      color: var(--primary-dark);
+    }
+
+    /* Stats Section */
+    .stats-section {
+      margin-top: 40px;
+    }
+
+    .stats-section h2 {
+      font-size: 1.8rem;
+      margin-bottom: 25px;
+      color: var(--dark);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      padding: 25px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      transition: var(--transition);
+    }
+
+    .stat-card:hover {
       transform: translateY(-5px);
-      box-shadow: 0 6px 10px rgba(0,0,0,0.15);
+    }
+
+    .stat-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: white;
+    }
+
+    .stat-1 .stat-icon {
+      background: var(--primary);
+    }
+
+    .stat-2 .stat-icon {
+      background: var(--success);
+    }
+
+    .stat-3 .stat-icon {
+      background: var(--warning);
+    }
+
+    .stat-4 .stat-icon {
+      background: var(--secondary);
+    }
+
+    .stat-info h3 {
+      font-size: 1.8rem;
+      margin-bottom: 5px;
+    }
+
+    .stat-info p {
+      color: var(--gray);
+      font-size: 0.9rem;
     }
 
     /* Footer */
     footer {
       margin-top: auto;
-      background-color: #0d6efd;
+      background: var(--dark);
       color: white;
-      text-align: center;
-      padding: 15px 20px;
+      padding: 25px 40px;
     }
 
-    footer p {
-      font-size: 0.9rem;
-      opacity: 0.9;
+    .footer-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 20px;
+    }
+
+    .footer-links a {
+      color: rgba(255,255,255,0.7);
+      text-decoration: none;
+      transition: var(--transition);
+    }
+
+    .footer-links a:hover {
+      color: white;
     }
 
     /* Responsive */
-    @media (max-width: 600px) {
-      nav a {
-        width: 80%;
+    @media (max-width: 992px) {
+      .header-content {
+        flex-direction: column;
+        gap: 20px;
         text-align: center;
-        padding: 15px 0;
+      }
+      
+      .cards-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      }
+    }
+
+    @media (max-width: 768px) {
+      .main-content {
+        padding: 30px 20px;
+      }
+      
+      .footer-content {
+        flex-direction: column;
+        gap: 20px;
+        text-align: center;
+      }
+      
+      .footer-links {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .cards-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      header {
+        padding: 20px;
+      }
+      
+      .logo {
+        flex-direction: column;
+        gap: 10px;
       }
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>TK Dashboard</h1>
-    <p>Access all your TK tools easily</p>
+    <div class="header-content">
+      <div class="logo">
+        <i class="fas fa-tachometer-alt"></i>
+        <div class="logo-text">
+          <h1>TK Dashboard</h1>
+          <p>Access all your TK tools in one place</p>
+        </div>
+      </div>
+      <div class="user-info">
+        <div class="user-avatar">
+          <i class="fas fa-user"></i>
+        </div>
+        <div>
+          <p>Welcome back, <strong>John Doe</strong></p>
+        </div>
+      </div>
+    </div>
   </header>
 
-  <nav>
-    <a href="Tkmarketing.html">Tk Marketing</a>
-    <a href="Tkchats.html">Tk Chats</a>
-    <a href="Tktask_manager.html">Tk Task Manager</a>
-    <a href="Tkaccounting_manager.html">TK Accounting Manager</a>
-  </nav>
+  <div class="main-content">
+    <section class="welcome-section">
+      <h2>Welcome to Your Dashboard</h2>
+      <p>Manage your business efficiently with our integrated tools. Everything you need in one centralized location.</p>
+    </section>
+
+    <section class="cards-grid">
+      <div class="card marketing">
+        <div class="card-icon">
+          <i class="fas fa-chart-line"></i>
+        </div>
+        <h3>TK Marketing</h3>
+        <p>Analyze campaign performance, track customer engagement, and optimize your marketing strategies.</p>
+        <a href="Tkmarketing.html" class="card-link">
+          Open Tool <i class="fas fa-arrow-right"></i>
+        </a>
+      </div>
+
+      <div class="card chats">
+        <div class="card-icon">
+          <i class="fas fa-comments"></i>
+        </div>
+        <h3>TK Chats</h3>
+        <p>Communicate with your team and customers through our integrated messaging platform.</p>
+        <a href="Tkchats.html" class="card-link">
+          Open Tool <i class="fas fa-arrow-right"></i>
+        </a>
+      </div>
+
+      <div class="card tasks">
+        <div class="card-icon">
+          <i class="fas fa-tasks"></i>
+        </div>
+        <h3>TK Task Manager</h3>
+        <p>Organize projects, assign tasks, and track progress with our comprehensive task management system.</p>
+        <a href="Tktask_manager.html" class="card-link">
+          Open Tool <i class="fas fa-arrow-right"></i>
+        </a>
+      </div>
+
+      <div class="card accounting">
+        <div class="card-icon">
+          <i class="fas fa-calculator"></i>
+        </div>
+        <h3>TK Accounting Manager</h3>
+        <p>Manage finances, track expenses, and generate financial reports with our accounting tools.</p>
+        <a href="Tkaccounting_manager.html" class="card-link">
+          Open Tool <i class="fas fa-arrow-right"></i>
+        </a>
+      </div>
+
+      <div class="card tax">
+        <div class="card-icon">
+          <i class="fas fa-file-invoice-dollar"></i>
+        </div>
+        <h3>TK Tax Compliance</h3>
+        <p>Calculate GST/HST, prepare tax filings, and ensure compliance with tax regulations.</p>
+        <a href="gst-hst-calculator.html" class="card-link">
+          Open Tool <i class="fas fa-arrow-right"></i>
+        </a>
+      </div>
+    </section>
+
+    <section class="stats-section">
+      <h2>Quick Stats</h2>
+      <div class="stats-grid">
+        <div class="stat-card stat-1">
+          <div class="stat-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="stat-info">
+            <h3>1,254</h3>
+            <p>Active Users</p>
+          </div>
+        </div>
+        
+        <div class="stat-card stat-2">
+          <div class="stat-icon">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <div class="stat-info">
+            <h3>89%</h3>
+            <p>Tasks Completed</p>
+          </div>
+        </div>
+        
+        <div class="stat-card stat-3">
+          <div class="stat-icon">
+            <i class="fas fa-chart-bar"></i>
+          </div>
+          <div class="stat-info">
+            <h3>24.5%</h3>
+            <p>Revenue Growth</p>
+          </div>
+        </div>
+        
+        <div class="stat-card stat-4">
+          <div class="stat-icon">
+            <i class="fas fa-comment-dots"></i>
+          </div>
+          <div class="stat-info">
+            <h3>342</h3>
+            <p>New Messages</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
 
   <footer>
-    <p>&copy; 2025 TK Dashboard. All rights reserved.</p>
+    <div class="footer-content">
+      <p>&copy; 2025 TK Dashboard. All rights reserved.</p>
+      <div class="footer-links">
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+        <a href="#">Support</a>
+        <a href="#">Contact Us</a>
+      </div>
+    </div>
   </footer>
 </body>
 </html>
