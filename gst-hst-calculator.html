@@ -793,6 +793,8 @@
         let revenues = JSON.parse(localStorage.getItem('gstRevenues')) || [];
         let expenses = JSON.parse(localStorage.getItem('gstExpenses')) || [];
         let submissions = JSON.parse(localStorage.getItem('gstSubmissions')) || [];
+        let taxChart, categoryChart;
+
 
         // DOM elements
         const taxRateSelect = document.getElementById('taxRate');
@@ -1253,7 +1255,6 @@
             }
         }
 
-        let taxChart, categoryChart;
         function initCharts() {
             const ctx = document.getElementById('taxChart').getContext('2d');
             taxChart = new Chart(ctx, {
