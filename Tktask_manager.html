@@ -86,6 +86,14 @@
                     
                     setFirebaseInitialized(true);
                     console.log("Firebase initialized successfully");
+
+                    // ADD THIS AUTHENTICATION CHECK
+auth.onAuthStateChanged(function(user) {
+    if (!user) {
+        // User is not logged in, redirect to login page
+        window.location.href = 'index.html';
+    }
+});
                     
                     // Load initial data from localStorage as fallback
                     const savedTasks = localStorage.getItem('tasks');
