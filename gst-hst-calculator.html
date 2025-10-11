@@ -520,6 +520,16 @@
     </style>
 </head>
 <body>
+<div id="header"></div>
+<script>
+  fetch('header.html')
+    .then(res => res.text())
+    .then(html => {
+      document.getElementById('header').innerHTML = html;
+    })
+    .catch(err => console.error('Header load error:', err));
+</script>
+
     <div class="container">
         <div class="header">
             <h1><i class="fas fa-calculator"></i> TaxMaster Pro</h1>
