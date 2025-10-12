@@ -275,14 +275,6 @@
     const loginBtn = document.getElementById('login-btn');
     const loginSpinner = document.getElementById('login-spinner');
 
-    // Check if user is already logged in
-    auth.onAuthStateChanged(function(user) {
-      if (user) {
-        // Redirect to dashboard page
-        window.location.href = "dashboard.html";
-      }
-    });
-
     // Handle login form submission
     loginForm.addEventListener('submit', function(e) {
       e.preventDefault();
