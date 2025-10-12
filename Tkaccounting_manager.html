@@ -10,7 +10,11 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     
-    <!-- Header Styles -->
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
     <style>
         * {
             margin: 0;
@@ -34,7 +38,6 @@
             --transition: all 0.3s ease;
         }
 
-        /* Navigation Tabs Styles */
         .header-nav {
             display: flex;
             gap: 5px;
@@ -65,40 +68,6 @@
             background: rgba(255, 255, 255, 0.2);
         }
 
-        .nav-link i {
-            font-size: 0.9rem;
-        }
-
-        /* Responsive adjustments for navigation */
-        @media (max-width: 1200px) {
-            .header-nav {
-                gap: 2px;
-            }
-            
-            .nav-link {
-                padding: 8px 12px;
-                font-size: 0.85rem;
-            }
-            
-            .nav-link span {
-                display: none;
-            }
-            
-            .nav-link i {
-                font-size: 1rem;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .header-nav {
-                order: 3;
-                grid-column: 1 / -1;
-                margin-top: 15px;
-                width: 100%;
-                justify-content: center;
-            }
-        }
-
         body {
             display: flex;
             flex-direction: column;
@@ -108,7 +77,6 @@
             line-height: 1.6;
         }
 
-        /* Header */
         header {
             background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
             color: white;
@@ -116,17 +84,6 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             position: relative;
             overflow: hidden;
-        }
-
-        header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0,0 L100,0 L100,100 Z" fill="rgba(255,255,255,0.1)"/></svg>');
-            background-size: cover;
         }
 
         .header-content {
@@ -150,10 +107,6 @@
             gap: 8px;
         }
 
-        .logout-btn:hover {
-            background: rgba(255,255,255,0.3);
-        }
-
         .logo {
             display: flex;
             align-items: center;
@@ -165,18 +118,6 @@
             background: rgba(255,255,255,0.2);
             padding: 12px;
             border-radius: 50%;
-        }
-
-        .logo-text h1 {
-            font-size: 2.2rem;
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
-
-        .logo-text p {
-            font-size: 1rem;
-            opacity: 0.9;
-            font-weight: 300;
         }
 
         .user-info {
@@ -196,60 +137,49 @@
             font-size: 1.5rem;
         }
 
-        /* Responsive */
-        @media (max-width: 992px) {
-            .header-content {
-                flex-direction: column;
-                gap: 20px;
-                text-align: center;
-            }
+        .fade-in { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .glass-effect { 
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
-
-        @media (max-width: 576px) {
-            header {
-                padding: 20px;
-            }
-            
-            .logo {
-                flex-direction: column;
-                gap: 10px;
-            }
+        .chart-container { position: relative; height: 300px; }
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.5s ease;
+            transform-origin: 50% 50%;
+        }
+        .hover-lift { transition: all 0.3s ease; }
+        .hover-lift:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3a86ff;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Hide all tabs by default */
+        .tab-content {
+            display: none;
+        }
+        
+        /* Show active tab */
+        .tab-content.active {
+            display: block;
         }
     </style>
-    
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-
-    <style>
-    .fade-in { animation: fadeIn 0.3s ease-in; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-    .positive { color: #10b981; }
-    .negative { color: #ef4444; }
-    .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-    .glass-effect { 
-        backdrop-filter: blur(10px);
-        background: rgba(255, 255, 255, 0.7);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-    .chart-container { position: relative; height: 300px; }
-    .progress-ring {
-        transform: rotate(-90deg);
-    }
-    .progress-ring-circle {
-        transition: stroke-dashoffset 0.5s ease;
-        transform-origin: 50% 50%;
-    }
-    .hover-lift { transition: all 0.3s ease; }
-    .hover-lift:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-</style>
-
 </head>
 <body class="bg-gray-50 min-h-screen">
-    <!-- Header from Business Insights -->
     <header>
         <div class="header-content">
             <div class="logo">
@@ -260,7 +190,6 @@
                 </div>
             </div>
             
-            <!-- NAVIGATION TABS -->
             <nav class="header-nav">
                 <a href="dashboard.html" class="nav-link">
                     <i class="fas fa-home"></i>
@@ -287,7 +216,6 @@
                     <span>Tax</span>
                 </a>
             </nav>
-            <!-- END OF NAVIGATION TABS -->
             
             <div class="user-info">
                 <div class="user-avatar">
@@ -304,915 +232,1139 @@
         </div>
     </header>
 
-    <!-- ROOT ELEMENT FOR REACT - MOVED OUTSIDE OF SCRIPT TAG -->
-    <div id="root"></div>
+    <div id="app" class="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-8 px-4">
+        <!-- Content will be rendered here by JavaScript -->
+    </div>
 
 <script>
-    // Firebase configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyBcuCuqYrySz26d7CoQXZllePzMq3LEyWE",
-      authDomain: "tkmachines-945b9.firebaseapp.com",
-      projectId: "tkmachines-945b9",
-      storageBucket: "tkmachines-945b9.firebasestorage.app",
-      messagingSenderId: "137087394703",
-      appId: "1:137087394703:web:81c3383fd6ee961ef3e1fa",
-      measurementId: "G-Y8GH34Q2FN"
-    };
+    // Wait for Firebase to load completely
+    document.addEventListener('DOMContentLoaded', function() {
+        try {
+            // Firebase configuration
+            const firebaseConfig = {
+                apiKey: "AIzaSyBcuCuqYrySz26d7CoQXZllePzMq3LEyWE",
+                authDomain: "tkmachines-945b9.firebaseapp.com",
+                projectId: "tkmachines-945b9",
+                storageBucket: "tkmachines-945b9.firebasestorage.app",
+                messagingSenderId: "137087394703",
+                appId: "1:137087394703:web:81c3383fd6ee961ef3e1fa",
+                measurementId: "G-Y8GH34Q2FN"
+            };
 
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    const auth = firebase.auth();
-
-    // ADD AUTHENTICATION CHECK
-    auth.onAuthStateChanged(function(user) {
-        if (!user) {
-            // User is not logged in, redirect to login page
-            window.location.href = 'index.html'; // Change this to your login page URL
+            // Initialize Firebase
+            if (typeof firebase !== 'undefined') {
+                const app = firebase.initializeApp(firebaseConfig);
+                window.firebaseApp = app;
+                console.log('Firebase initialized successfully');
+            } else {
+                console.error('Firebase not loaded');
+            }
+        } catch (error) {
+            console.error('Firebase initialization error:', error);
         }
+        
+        // Initialize the accounting app
+        initAccountingApp();
     });
-</script>
 
-    <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
-
-        function AccountingApp() {
-            // State for transactions
-            const [transactions, setTransactions] = useState([]);
-            const [description, setDescription] = useState('');
-            const [amount, setAmount] = useState('');
-            const [type, setType] = useState('revenue');
-            const [category, setCategory] = useState('');
-            const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+    // Accounting Manager Application
+    function initAccountingApp() {
+        // State variables
+        let transactions = [];
+        let currentUser = null;
+        let firebaseReady = false;
+        let loading = true;
+        let saving = false;
+        
+        // UI state
+        let filter = 'all';
+        let timeRange = 'all';
+        let activeTab = 'overview';
+        let editingId = null;
+        let editData = {};
+        
+        // Form fields
+        let description = '';
+        let amount = '';
+        let type = 'revenue';
+        let category = '';
+        let date = new Date().toISOString().split('T')[0];
+        
+        // Chart instances
+        let financialChart = null;
+        let categoryChart = null;
+        let trendChart = null;
+        let cashFlowChart = null;
+        
+        // Categories
+        const revenueCategories = ['Sales', 'Services', 'Investments', 'Other Income'];
+        const expenseCategories = ['Supplies', 'Salaries', 'Rent', 'Utilities', 'Marketing', 'Travel', 'Equipment', 'Other Expenses'];
+        
+        // DOM elements
+        const appElement = document.getElementById('app');
+        
+        // Initialize the app
+        function init() {
+            checkFirebase();
+            renderApp();
+        }
+        
+        // Check Firebase status
+        function checkFirebase() {
+            if (window.firebaseApp && firebase.auth) {
+                firebaseReady = true;
+                
+                // Set up auth state listener
+                firebase.auth().onAuthStateChanged((user) => {
+                    currentUser = user;
+                    if (user) {
+                        loadTransactionsFromFirebase();
+                    } else {
+                        loading = false;
+                        renderApp();
+                    }
+                });
+            } else {
+                // Retry after a short delay
+                setTimeout(checkFirebase, 100);
+            }
+        }
+        
+        // Load transactions from Firebase
+        async function loadTransactionsFromFirebase() {
+            try {
+                loading = true;
+                renderApp();
+                
+                const snapshot = await firebase.firestore()
+                    .collection('transactions_account')
+                    .where('userId', '==', currentUser.uid)
+                    .orderBy('createdAt', 'desc')
+                    .get();
+                
+                transactions = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                
+                loading = false;
+                renderApp();
+                initCharts();
+            } catch (error) {
+                console.error("Error loading transactions:", error);
+                loading = false;
+                renderApp();
+            }
+        }
+        
+        // Render the entire application
+        function renderApp() {
+            if (!firebaseReady) {
+                appElement.innerHTML = `
+                    <div class="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-8 px-4 flex items-center justify-center">
+                        <div class="text-center">
+                            <div class="loading-spinner mb-4"></div>
+                            <p class="text-gray-600">Initializing application...</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
             
-            // State for filtering and views
-            const [filter, setFilter] = useState('all');
-            const [timeRange, setTimeRange] = useState('all');
-            const [editingId, setEditingId] = useState(null);
-            const [editData, setEditData] = useState({});
-            const [activeTab, setActiveTab] = useState('overview');
+            if (loading) {
+                appElement.innerHTML = `
+                    <div class="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-8 px-4 flex items-center justify-center">
+                        <div class="text-center">
+                            <div class="loading-spinner mb-4"></div>
+                            <p class="text-gray-600">Loading your accounting data...</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            const { revenue, expenses, profit, profitMargin } = calculateTotals();
+            
+            appElement.innerHTML = `
+                <div class="max-w-7xl mx-auto">
+                    <div class="text-center mb-8">
+                        <h1 class="text-4xl font-bold text-gray-800 mb-2">
+                            <i class="fas fa-chart-line text-purple-500 mr-3"></i>
+                            Modern Accounting Manager
+                        </h1>
+                        <p class="text-gray-600">Track revenue, expenses, and profits with advanced analytics</p>
+                        ${!currentUser ? '<p class="text-orange-500 text-sm mt-2">Demo Mode - Data stored locally</p>' : ''}
+                    </div>
 
-            // Chart references
-            const financialChartRef = useRef(null);
-            const categoryChartRef = useRef(null);
-            const trendChartRef = useRef(null);
-            const cashFlowChartRef = useRef(null);
+                    <div class="flex justify-center mb-8">
+                        <div class="glass-effect rounded-xl p-1 flex">
+                            ${['overview', 'analytics', 'transactions'].map(tab => `
+                                <button
+                                    id="tab-${tab}"
+                                    onclick="accountingApp.setActiveTab('${tab}')"
+                                    class="px-6 py-3 rounded-lg capitalize font-medium transition-all duration-300 ${activeTab === tab ? 'bg-white text-purple-600 shadow-md' : 'text-gray-600 hover:text-purple-500'}"
+                                >
+                                    <i class="fas ${
+                                        tab === 'overview' ? 'fa-home' :
+                                        tab === 'analytics' ? 'fa-chart-bar' : 'fa-receipt'
+                                    } mr-2"></i>
+                                    ${tab}
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
 
-            // Categories
-            const revenueCategories = ['Sales', 'Services', 'Investments', 'Other Income'];
-            const expenseCategories = ['Supplies', 'Salaries', 'Rent', 'Utilities', 'Marketing', 'Travel', 'Equipment', 'Other Expenses'];
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                        <div class="bg-white rounded-xl shadow-lg p-6 text-center hover-lift">
+                            <div class="text-2xl font-bold text-green-600">${formatCurrency(revenue)}</div>
+                            <div class="text-sm text-gray-600">Total Revenue</div>
+                            <i class="fas fa-arrow-up text-green-500 mt-2"></i>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-lg p-6 text-center hover-lift">
+                            <div class="text-2xl font-bold text-red-600">${formatCurrency(expenses)}</div>
+                            <div class="text-sm text-gray-600">Total Expenses</div>
+                            <i class="fas fa-arrow-down text-red-500 mt-2"></i>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-lg p-6 text-center hover-lift">
+                            <div class="text-2xl font-bold ${profit >= 0 ? 'text-blue-600' : 'text-red-600'}">${formatCurrency(profit)}</div>
+                            <div class="text-sm text-gray-600">Net Profit</div>
+                            <i class="fas ${profit >= 0 ? 'fa-smile text-blue-500' : 'fa-frown text-red-500'} mt-2"></i>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-lg p-6 text-center hover-lift">
+                            <div class="text-2xl font-bold ${profitMargin >= 0 ? 'text-purple-600' : 'text-red-600'}">${profitMargin.toFixed(1)}%</div>
+                            <div class="text-sm text-gray-600">Profit Margin</div>
+                            <i class="fas fa-percentage text-purple-500 mt-2"></i>
+                        </div>
+                    </div>
 
-            // Initialize charts when data changes
-            useEffect(() => {
-                if (transactions.length > 0) {
-                    setTimeout(() => {
-                        renderFinancialChart();
-                        renderCategoryChart();
-                        renderTrendChart();
-                        renderCashFlowChart();
-                    }, 0);
+                    <!-- Overview Tab -->
+                    <div id="tab-content-overview" class="tab-content ${activeTab === 'overview' ? 'active' : ''}">
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            <div class="lg:col-span-1 space-y-6">
+                                <div class="bg-white rounded-xl shadow-lg p-6 hover-lift">
+                                    <h2 class="text-xl font-semibold mb-4 text-gray-800">
+                                        <i class="fas fa-plus-circle text-green-500 mr-2"></i>
+                                        ${editingId ? 'Edit Transaction' : 'Add Transaction'}
+                                    </h2>
+                                    <form id="transaction-form" class="space-y-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                                Type *
+                                            </label>
+                                            <select
+                                                id="transaction-type"
+                                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                                                required
+                                            >
+                                                <option value="revenue">Revenue</option>
+                                                <option value="expense">Expense</option>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                                Category *
+                                            </label>
+                                            <select
+                                                id="transaction-category"
+                                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                                                required
+                                            >
+                                                <option value="">Select Category</option>
+                                            ${renderCategoryOptions()}
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                                Description *
+                                            </label>
+                                            <input
+                                                type="text"
+                                                id="transaction-description"
+                                                placeholder="Transaction description"
+                                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                                                required
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                                Amount *
+                                            </label>
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                id="transaction-amount"
+                                                placeholder="0.00"
+                                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                                                required
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                                Date *
+                                            </label>
+                                            <input
+                                                type="date"
+                                                id="transaction-date"
+                                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                                                required
+                                            />
+                                        </div>
+
+                                        <div class="flex gap-2">
+                                            ${editingId ? `
+                                                <button
+                                                    type="submit"
+                                                    class="flex-1 bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition duration-200"
+                                                >
+                                                    ${saving ? 'Saving...' : '<i class="fas fa-save mr-2"></i>Save Changes'}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onclick="accountingApp.cancelEdit()"
+                                                    class="bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600 transition duration-200"
+                                                >
+                                                    Cancel
+                                                </button>
+                                            ` : `
+                                                <button
+                                                    type="submit"
+                                                    class="w-full bg-green-500 text-white py-3 px-4 rounded-lg hover:bg-green-600 transition duration-200 font-semibold"
+                                                >
+                                                    ${saving ? 'Saving...' : '<i class="fas fa-plus mr-2"></i>Add Transaction'}
+                                                </button>
+                                            `}
+                                        </div>
+                                    </form>
+                                </div>
+
+                                <div class="bg-white rounded-xl shadow-lg p-6 hover-lift">
+                                    <h3 class="text-lg font-semibold mb-4 text-gray-800">
+                                        <i class="fas fa-filter text-blue-500 mr-2"></i>
+                                        Filters
+                                    </h3>
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                Transaction Type
+                                            </label>
+                                            <div class="flex gap-2 flex-wrap">
+                                                ${['all', 'revenue', 'expense'].map(f => `
+                                                    <button
+                                                        onclick="accountingApp.setFilter('${f}')"
+                                                        class="px-3 py-2 rounded-lg capitalize text-sm ${filter === f ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
+                                                    >
+                                                        ${f}
+                                                    </button>
+                                                `).join('')}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                Time Range
+                                            </label>
+                                            <div class="flex gap-2 flex-wrap">
+                                                ${['all', 'month', 'week'].map(t => `
+                                                    <button
+                                                        onclick="accountingApp.setTimeRange('${t}')"
+                                                        class="px-3 py-2 rounded-lg capitalize text-sm ${timeRange === t ? 'bg-purple-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
+                                                    >
+                                                        ${t}
+                                                    </button>
+                                                `).join('')}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="lg:col-span-2 space-y-6">
+                                <div class="bg-white rounded-xl shadow-lg p-6 hover-lift">
+                                    <h3 class="text-lg font-semibold mb-4 text-gray-800">
+                                        <i class="fas fa-chart-bar text-purple-500 mr-2"></i>
+                                        Financial Overview
+                                    </h3>
+                                    <div class="chart-container">
+                                        <canvas id="financial-chart"></canvas>
+                                    </div>
+                                </div>
+
+                                <div class="bg-white rounded-xl shadow-lg p-6 hover-lift">
+                                    <h3 class="text-lg font-semibold mb-4 text-gray-800">
+                                        <i class="fas fa-chart-pie text-orange-500 mr-2"></i>
+                                        Category Breakdown
+                                    </h3>
+                                    <div class="chart-container">
+                                        <canvas id="category-chart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Analytics Tab -->
+                    <div id="tab-content-analytics" class="tab-content ${activeTab === 'analytics' ? 'active' : ''}">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div class="bg-white rounded-xl shadow-lg p-6 hover-lift">
+                                <h3 class="text-lg font-semibold mb-4 text-gray-800">
+                                    <i class="fas fa-chart-line text-blue-500 mr-2"></i>
+                                    Monthly Trends
+                                </h3>
+                                <div class="chart-container">
+                                    <canvas id="trend-chart"></canvas>
+                                </div>
+                            </div>
+
+                            <div class="bg-white rounded-xl shadow-lg p-6 hover-lift">
+                                <h3 class="text-lg font-semibold mb-4 text-gray-800">
+                                    <i class="fas fa-money-bill-wave text-green-500 mr-2"></i>
+                                    Monthly Cash Flow
+                                </h3>
+                                <div class="chart-container">
+                                    <canvas id="cash-flow-chart"></canvas>
+                                </div>
+                            </div>
+
+                            <div class="bg-white rounded-xl shadow-lg p-6 hover-lift">
+                                <h3 class="text-lg font-semibold mb-4 text-gray-800">
+                                    <i class="fas fa-tachometer-alt text-purple-500 mr-2"></i>
+                                    Financial Health
+                                </h3>
+                                <div class="flex justify-around items-center">
+                                    <div class="text-center">
+                                        ${renderProgressRing(profitMargin > 0 ? profitMargin : 0, 50, '#10b981')}
+                                        <p class="mt-2 text-sm font-medium">Profit Margin</p>
+                                    </div>
+                                    <div class="text-center">
+                                        ${renderProgressRing(revenue > 0 ? (expenses / revenue) * 100 : 0, 100, '#ef4444')}
+                                        <p class="mt-2 text-sm font-medium">Expense Ratio</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-white rounded-xl shadow-lg p-6 hover-lift">
+                                <h3 class="text-lg font-semibold mb-4 text-gray-800">
+                                    <i class="fas fa-table text-orange-500 mr-2"></i>
+                                    Category Details
+                                </h3>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full">
+                                        <thead>
+                                            <tr class="border-b">
+                                                <th class="text-left py-2">Category</th>
+                                                <th class="text-right py-2">Amount</th>
+                                                <th class="text-right py-2">Percentage</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${renderCategoryDetails()}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Transactions Tab -->
+                    <div id="tab-content-transactions" class="tab-content ${activeTab === 'transactions' ? 'active' : ''}">
+                        <div class="bg-white rounded-xl shadow-lg p-6 hover-lift">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-xl font-semibold text-gray-800">
+                                    <i class="fas fa-list text-blue-500 mr-2"></i>
+                                    Transactions (${filteredTransactions.length})
+                                </h2>
+                                <div class="text-sm text-gray-600">
+                                    Showing: ${filter === 'all' ? 'All' : filter} • ${timeRange === 'all' ? 'All time' : `This ${timeRange}`}
+                                </div>
+                            </div>
+
+                            ${filteredTransactions.length === 0 ? `
+                                <div class="text-center py-8 text-gray-500">
+                                    <i class="fas fa-receipt text-4xl mb-4 text-gray-300"></i>
+                                    <p>No transactions found. Add your first transaction above!</p>
+                                </div>
+                            ` : `
+                                <div class="space-y-3 max-h-96 overflow-y-auto">
+                                    ${renderTransactionList()}
+                                </div>
+                            `}
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-8 text-gray-500 text-sm">
+                        <p>All data is ${currentUser ? 'securely stored in Firebase Firestore' : 'stored locally in demo mode'} 💰</p>
+                    </div>
+                </div>
+            `;
+            
+            // Set form values if editing
+            if (editingId) {
+                document.getElementById('transaction-type').value = editData.type;
+                document.getElementById('transaction-category').value = editData.category;
+                document.getElementById('transaction-description').value = editData.description;
+                document.getElementById('transaction-amount').value = editData.amount;
+                document.getElementById('transaction-date').value = editData.date;
+            } else {
+                document.getElementById('transaction-type').value = type;
+                document.getElementById('transaction-category').value = category;
+                document.getElementById('transaction-description').value = description;
+                document.getElementById('transaction-amount').value = amount;
+                document.getElementById('transaction-date').value = date;
+            }
+            
+            // Add event listeners
+            document.getElementById('transaction-form').addEventListener('submit', handleFormSubmit);
+            document.getElementById('transaction-type').addEventListener('change', updateCategoryOptions);
+        }
+        
+        // Helper functions for rendering
+        function renderCategoryOptions() {
+            const currentType = editingId ? editData.type : type;
+            const categories = currentType === 'revenue' ? revenueCategories : expenseCategories;
+            return categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+        }
+        
+        function renderProgressRing(value, max, color) {
+            const size = 120;
+            const strokeWidth = 10;
+            const radius = (size - strokeWidth) / 2;
+            const circumference = radius * 2 * Math.PI;
+            const strokeDashoffset = circumference - (value / max) * circumference;
+            const percentage = Math.round((value / max) * 100);
+            
+            return `
+                <svg width="${size}" height="${size}" class="progress-ring">
+                    <circle
+                        class="progress-ring-circle"
+                        stroke="${color}"
+                        stroke-width="${strokeWidth}"
+                        stroke-dasharray="${circumference}"
+                        stroke-dashoffset="${strokeDashoffset}"
+                        stroke-linecap="round"
+                        fill="transparent"
+                        r="${radius}"
+                        cx="${size / 2}"
+                        cy="${size / 2}"
+                    />
+                    <text 
+                        x="50%" 
+                        y="50%" 
+                        text-anchor="middle" 
+                        dy=".3em" 
+                        font-size="16" 
+                        font-weight="bold"
+                        fill="${color}"
+                    >
+                        ${percentage}%
+                    </text>
+                </svg>
+            `;
+        }
+        
+        function renderCategoryDetails() {
+            const breakdown = categoryBreakdown();
+            return Object.entries(breakdown).map(([cat, total]) => {
+                const percentage = revenue > 0 ? (total / revenue) * 100 : 0;
+                return `
+                    <tr class="border-b border-gray-100">
+                        <td class="py-2">${cat}</td>
+                        <td class="text-right font-medium ${revenueCategories.includes(cat) ? 'text-green-600' : 'text-red-600'}">
+                            ${formatCurrency(total)}
+                        </td>
+                        <td class="text-right text-gray-600">
+                            ${percentage.toFixed(1)}%
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        function renderTransactionList() {
+            return filteredTransactions.map(transaction => `
+                <div class="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition duration-200 fade-in">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-1">
+                                <span class="inline-block w-3 h-3 rounded-full ${transaction.type === 'revenue' ? 'bg-green-500' : 'bg-red-500'}"></span>
+                                <span class="font-semibold text-gray-800">
+                                    ${transaction.description}
+                                </span>
+                                <span class="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                    ${transaction.category}
+                                </span>
+                            </div>
+                            <div class="text-sm text-gray-600 ml-6">
+                                ${new Date(transaction.date).toLocaleDateString()} • 
+                                ${transaction.type === 'revenue' ? ' Revenue' : ' Expense'}
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold ${transaction.type === 'revenue' ? 'text-green-600' : 'text-red-600'}">
+                                ${transaction.type === 'revenue' ? '+' : '-'}${formatCurrency(transaction.amount)}
+                            </span>
+                            <div class="flex gap-1">
+                                <button
+                                    onclick="accountingApp.startEdit('${transaction.id}')"
+                                    class="p-1 text-blue-500 hover:bg-blue-50 rounded transition duration-200"
+                                    title="Edit transaction"
+                                >
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button
+                                    onclick="accountingApp.deleteTransaction('${transaction.id}')"
+                                    class="p-1 text-red-500 hover:bg-red-50 rounded transition duration-200"
+                                    title="Delete transaction"
+                                >
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Data calculation functions
+        function calculateTotals() {
+            const filtered = filterTransactions();
+            const revenue = filtered
+                .filter(t => t.type === 'revenue')
+                .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+            
+            const expenses = filtered
+                .filter(t => t.type === 'expense')
+                .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+            
+            const profit = revenue - expenses;
+            const profitMargin = revenue > 0 ? (profit / revenue) * 100 : 0;
+
+            return { revenue, expenses, profit, profitMargin };
+        }
+        
+        function filterTransactions() {
+            let filtered = transactions;
+            
+            if (filter !== 'all') {
+                filtered = filtered.filter(t => t.type === filter);
+            }
+            
+            const now = new Date();
+            if (timeRange === 'month') {
+                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                filtered = filtered.filter(t => new Date(t.date) >= startOfMonth);
+            } else if (timeRange === 'week') {
+                const startOfWeek = new Date(now);
+                startOfWeek.setDate(now.getDate() - now.getDay());
+                filtered = filtered.filter(t => new Date(t.date) >= startOfWeek);
+            }
+            
+            return filtered;
+        }
+        
+        function categoryBreakdown() {
+            const breakdown = {};
+            filteredTransactions.forEach(t => {
+                if (!breakdown[t.category]) breakdown[t.category] = 0;
+                breakdown[t.category] += t.amount;
+            });
+            return breakdown;
+        }
+        
+        function getMonthlyTrendData() {
+            const monthlyData = {};
+            const now = new Date();
+            const months = [];
+            
+            for (let i = 5; i >= 0; i--) {
+                const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+                months.push(monthKey);
+                monthlyData[monthKey] = { revenue: 0, expenses: 0 };
+            }
+            
+            transactions.forEach(t => {
+                const date = new Date(t.date);
+                const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+                
+                if (monthlyData[monthKey]) {
+                    if (t.type === 'revenue') {
+                        monthlyData[monthKey].revenue += t.amount;
+                    } else {
+                        monthlyData[monthKey].expenses += t.amount;
+                    }
                 }
-            }, [transactions, filter, timeRange]);
-
-            // Calculations
-            const calculateTotals = () => {
-                const filtered = filterTransactions();
-                const revenue = filtered
-                    .filter(t => t.type === 'revenue')
-                    .reduce((sum, t) => sum + parseFloat(t.amount), 0);
-                
-                const expenses = filtered
-                    .filter(t => t.type === 'expense')
-                    .reduce((sum, t) => sum + parseFloat(t.amount), 0);
-                
-                const profit = revenue - expenses;
-                const profitMargin = revenue > 0 ? (profit / revenue) * 100 : 0;
-
-                return { revenue, expenses, profit, profitMargin };
+            });
+            
+            return {
+                labels: months,
+                revenue: months.map(m => monthlyData[m].revenue),
+                expenses: months.map(m => monthlyData[m].expenses)
             };
-
-            const filterTransactions = () => {
-                let filtered = transactions;
-                
-                if (filter !== 'all') {
-                    filtered = filtered.filter(t => t.type === filter);
-                }
-                
-                const now = new Date();
-                if (timeRange === 'month') {
-                    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-                    filtered = filtered.filter(t => new Date(t.date) >= startOfMonth);
-                } else if (timeRange === 'week') {
-                    const startOfWeek = new Date(now);
-                    startOfWeek.setDate(now.getDate() - now.getDay());
-                    filtered = filtered.filter(t => new Date(t.date) >= startOfWeek);
-                }
-                
-                return filtered;
+        }
+        
+        function getCashFlowData() {
+            const cashFlow = { revenue: 0, expenses: 0 };
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            
+            transactions
+                .filter(t => new Date(t.date) >= startOfMonth)
+                .forEach(t => {
+                    if (t.type === 'revenue') {
+                        cashFlow.revenue += t.amount;
+                    } else {
+                        cashFlow.expenses += t.amount;
+                    }
+                });
+            
+            return cashFlow;
+        }
+        
+        // Chart functions
+        function initCharts() {
+            renderFinancialChart();
+            renderCategoryChart();
+            renderTrendChart();
+            renderCashFlowChart();
+        }
+        
+        function renderFinancialChart() {
+            const ctx = document.getElementById('financial-chart')?.getContext('2d');
+            if (!ctx) return;
+            
+            if (financialChart) {
+                financialChart.destroy();
+            }
+            
+            const { revenue, expenses, profit } = calculateTotals();
+            
+            const data = {
+                labels: ['Revenue', 'Expenses', 'Profit'],
+                datasets: [{
+                    data: [revenue, expenses, profit],
+                    backgroundColor: [
+                        'rgba(16, 185, 129, 0.8)',
+                        'rgba(239, 68, 68, 0.8)',
+                        'rgba(59, 130, 246, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgb(16, 185, 129)',
+                        'rgb(239, 68, 68)',
+                        'rgb(59, 130, 246)'
+                    ],
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    borderSkipped: false,
+                }]
             };
+            
+            financialChart = new Chart(ctx, {
+                type: 'bar',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${formatCurrency(context.raw)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return formatCurrency(value);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function renderCategoryChart() {
+            const ctx = document.getElementById('category-chart')?.getContext('2d');
+            if (!ctx) return;
+            
+            if (categoryChart) {
+                categoryChart.destroy();
+            }
+            
+            const breakdown = categoryBreakdown();
+            const labels = Object.keys(breakdown);
+            const data = Object.values(breakdown);
+            
+            const backgroundColors = labels.map((_, i) => {
+                const hue = (i * 137.5) % 360;
+                return `hsla(${hue}, 70%, 65%, 0.8)`;
+            });
+            
+            const borderColors = labels.map((_, i) => {
+                const hue = (i * 137.5) % 360;
+                return `hsl(${hue}, 70%, 50%)`;
+            });
+            
+            categoryChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: backgroundColors,
+                        borderColor: borderColors,
+                        borderWidth: 2,
+                        hoverOffset: 15
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 15
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw;
+                                    const total = data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${context.label}: ${formatCurrency(value)} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function renderTrendChart() {
+            const ctx = document.getElementById('trend-chart')?.getContext('2d');
+            if (!ctx) return;
+            
+            if (trendChart) {
+                trendChart.destroy();
+            }
+            
+            const trendData = getMonthlyTrendData();
+            
+            trendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: trendData.labels,
+                    datasets: [
+                        {
+                            label: 'Revenue',
+                            data: trendData.revenue,
+                            borderColor: 'rgb(16, 185, 129)',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.3,
+                            fill: true
+                        },
+                        {
+                            label: 'Expenses',
+                            data: trendData.expenses,
+                            borderColor: 'rgb(239, 68, 68)',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            tension: 0.3,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${formatCurrency(context.raw)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return formatCurrency(value);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function renderCashFlowChart() {
+            const ctx = document.getElementById('cash-flow-chart')?.getContext('2d');
+            if (!ctx) return;
+            
+            if (cashFlowChart) {
+                cashFlowChart.destroy();
+            }
+            
+            const cashFlow = getCashFlowData();
+            
+            cashFlowChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Revenue', 'Expenses'],
+                    datasets: [{
+                        data: [cashFlow.revenue, cashFlow.expenses],
+                        backgroundColor: [
+                            'rgba(16, 185, 129, 0.8)',
+                            'rgba(239, 68, 68, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgb(16, 185, 129)',
+                            'rgb(239, 68, 68)'
+                        ],
+                        borderWidth: 2,
+                        hoverOffset: 15
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${formatCurrency(context.raw)}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Event handlers
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            
+            if (editingId) {
+                await saveEdit();
+            } else {
+                await addTransaction();
+            }
+        }
+        
+        async function addTransaction() {
+            const description = document.getElementById('transaction-description').value.trim();
+            const amount = document.getElementById('transaction-amount').value;
+            const type = document.getElementById('transaction-type').value;
+            const category = document.getElementById('transaction-category').value;
+            const date = document.getElementById('transaction-date').value;
+            
+            if (!description || !amount || !category) return;
 
-            const addTransaction = (e) => {
-                e.preventDefault();
-                if (!description.trim() || !amount || !category) return;
-
+            try {
+                saving = true;
+                renderApp();
+                
                 const newTransaction = {
-                    id: Date.now().toString(),
-                    description: description.trim(),
+                    description,
                     amount: parseFloat(amount),
                     type,
                     category,
                     date,
-                    createdAt: new Date().toISOString()
+                    userId: currentUser ? currentUser.uid : 'demo',
+                    createdAt: firebase.firestore?.FieldValue?.serverTimestamp?.() || new Date()
                 };
 
-                setTransactions([newTransaction, ...transactions]);
+                if (firebaseReady && currentUser) {
+                    // Add to Firebase
+                    const docRef = await firebase.firestore().collection('transactions_account').add(newTransaction);
+                    // Update local state with Firebase ID
+                    transactions = [{ id: docRef.id, ...newTransaction }, ...transactions];
+                } else {
+                    // Local storage fallback
+                    const localId = Date.now().toString();
+                    transactions = [{ id: localId, ...newTransaction }, ...transactions];
+                }
+                
                 resetForm();
-            };
-
-            const deleteTransaction = (id) => {
-                setTransactions(transactions.filter(t => t.id !== id));
-            };
-
-            const startEditing = (transaction) => {
-                setEditingId(transaction.id);
-                setEditData({ ...transaction });
-            };
-
-            const cancelEditing = () => {
-                setEditingId(null);
-                setEditData({});
-            };
-
-            const saveEdit = () => {
-                setTransactions(transactions.map(t => 
-                    t.id === editingId ? { ...editData, amount: parseFloat(editData.amount) } : t
-                ));
-                cancelEditing();
-            };
-
-            const resetForm = () => {
-                setDescription('');
-                setAmount('');
-                setCategory('');
-                setDate(new Date().toISOString().split('T')[0]);
-            };
-
-            const formatCurrency = (value) => {
-                return new Intl.NumberFormat('en-US', {
-                    style: 'currency',
-                    currency: 'USD'
-                }).format(value);
-            };
-
-            const { revenue, expenses, profit, profitMargin } = calculateTotals();
-            const filteredTransactions = filterTransactions();
-
-            const categoryBreakdown = () => {
-                const breakdown = {};
-                filteredTransactions.forEach(t => {
-                    if (!breakdown[t.category]) breakdown[t.category] = 0;
-                    breakdown[t.category] += t.amount;
-                });
-                return breakdown;
-            };
-
-            const getMonthlyTrendData = () => {
-                const monthlyData = {};
-                const now = new Date();
-                const months = [];
-                
-                for (let i = 5; i >= 0; i--) {
-                    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-                    const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
-                    months.push(monthKey);
-                    monthlyData[monthKey] = { revenue: 0, expenses: 0 };
-                }
-                
-                transactions.forEach(t => {
-                    const date = new Date(t.date);
-                    const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
-                    
-                    if (monthlyData[monthKey]) {
-                        if (t.type === 'revenue') {
-                            monthlyData[monthKey].revenue += t.amount;
-                        } else {
-                            monthlyData[monthKey].expenses += t.amount;
-                        }
-                    }
-                });
-                
-                return {
-                    labels: months,
-                    revenue: months.map(m => monthlyData[m].revenue),
-                    expenses: months.map(m => monthlyData[m].expenses)
+                saving = false;
+                renderApp();
+                initCharts();
+            } catch (error) {
+                console.error("Error adding transaction:", error);
+                // Local fallback
+                const localId = Date.now().toString();
+                const newTransaction = {
+                    id: localId,
+                    description,
+                    amount: parseFloat(amount),
+                    type,
+                    category,
+                    date,
+                    userId: 'demo',
+                    createdAt: new Date()
                 };
-            };
-
-            const getCashFlowData = () => {
-                const cashFlow = { revenue: 0, expenses: 0 };
-                const now = new Date();
-                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-                
-                transactions
-                    .filter(t => new Date(t.date) >= startOfMonth)
-                    .forEach(t => {
-                        if (t.type === 'revenue') {
-                            cashFlow.revenue += t.amount;
-                        } else {
-                            cashFlow.expenses += t.amount;
-                        }
-                    });
-                
-                return cashFlow;
-            };
-
-            const renderFinancialChart = () => {
-                const ctx = financialChartRef.current?.getContext('2d');
-                if (!ctx) return;
-                
-                if (window.financialChart) {
-                    window.financialChart.destroy();
-                }
-                
-                const data = {
-                    labels: ['Revenue', 'Expenses', 'Profit'],
-                    datasets: [{
-                        data: [revenue, expenses, profit],
-                        backgroundColor: [
-                            'rgba(16, 185, 129, 0.8)',
-                            'rgba(239, 68, 68, 0.8)',
-                            'rgba(59, 130, 246, 0.8)'
-                        ],
-                        borderColor: [
-                            'rgb(16, 185, 129)',
-                            'rgb(239, 68, 68)',
-                            'rgb(59, 130, 246)'
-                        ],
-                        borderWidth: 2,
-                        borderRadius: 8,
-                        borderSkipped: false,
-                    }]
-                };
-                
-                window.financialChart = new Chart(ctx, {
-                    type: 'bar',
-                    data: data,
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: false
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return `${context.label}: ${formatCurrency(context.raw)}`;
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    callback: function(value) {
-                                        return formatCurrency(value);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            };
-
-            const renderCategoryChart = () => {
-                const ctx = categoryChartRef.current?.getContext('2d');
-                if (!ctx) return;
-                
-                if (window.categoryChart) {
-                    window.categoryChart.destroy();
-                }
-                
-                const breakdown = categoryBreakdown();
-                const labels = Object.keys(breakdown);
-                const data = Object.values(breakdown);
-                
-                const backgroundColors = labels.map((_, i) => {
-                    const hue = (i * 137.5) % 360;
-                    return `hsla(${hue}, 70%, 65%, 0.8)`;
-                });
-                
-                const borderColors = labels.map((_, i) => {
-                    const hue = (i * 137.5) % 360;
-                    return `hsl(${hue}, 70%, 50%)`;
-                });
-                
-                window.categoryChart = new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            data: data,
-                            backgroundColor: backgroundColors,
-                            borderColor: borderColors,
-                            borderWidth: 2,
-                            hoverOffset: 15
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'right',
-                                labels: {
-                                    boxWidth: 12,
-                                    padding: 15
-                                }
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        const value = context.raw;
-                                        const total = data.reduce((a, b) => a + b, 0);
-                                        const percentage = ((value / total) * 100).toFixed(1);
-                                        return `${context.label}: ${formatCurrency(value)} (${percentage}%)`;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            };
-
-            const renderTrendChart = () => {
-                const ctx = trendChartRef.current?.getContext('2d');
-                if (!ctx) return;
-                
-                if (window.trendChart) {
-                    window.trendChart.destroy();
-                }
-                
-                const trendData = getMonthlyTrendData();
-                
-                window.trendChart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: trendData.labels,
-                        datasets: [
-                            {
-                                label: 'Revenue',
-                                data: trendData.revenue,
-                                borderColor: 'rgb(16, 185, 129)',
-                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                                tension: 0.3,
-                                fill: true
-                            },
-                            {
-                                label: 'Expenses',
-                                data: trendData.expenses,
-                                borderColor: 'rgb(239, 68, 68)',
-                                backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                                tension: 0.3,
-                                fill: true
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return `${context.dataset.label}: ${formatCurrency(context.raw)}`;
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    callback: function(value) {
-                                        return formatCurrency(value);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            };
-
-            const renderCashFlowChart = () => {
-                const ctx = cashFlowChartRef.current?.getContext('2d');
-                if (!ctx) return;
-                
-                if (window.cashFlowChart) {
-                    window.cashFlowChart.destroy();
-                }
-                
-                const cashFlow = getCashFlowData();
-                
-                window.cashFlowChart = new Chart(ctx, {
-                    type: 'pie',
-                    data: {
-                        labels: ['Revenue', 'Expenses'],
-                        datasets: [{
-                            data: [cashFlow.revenue, cashFlow.expenses],
-                            backgroundColor: [
-                                'rgba(16, 185, 129, 0.8)',
-                                'rgba(239, 68, 68, 0.8)'
-                            ],
-                            borderColor: [
-                                'rgb(16, 185, 129)',
-                                'rgb(239, 68, 68)'
-                            ],
-                            borderWidth: 2,
-                            hoverOffset: 15
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return `${context.label}: ${formatCurrency(context.raw)}`;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            };
-
-            const ProgressRing = ({ value, max, size = 120, strokeWidth = 10, color }) => {
-                const radius = (size - strokeWidth) / 2;
-                const circumference = radius * 2 * Math.PI;
-                const strokeDashoffset = circumference - (value / max) * circumference;
-                
-                return (
-                    <svg width={size} height={size} className="progress-ring">
-                        <circle
-                            className="progress-ring-circle"
-                            stroke={color}
-                            strokeWidth={strokeWidth}
-                            strokeDasharray={circumference}
-                            strokeDashoffset={strokeDashoffset}
-                            strokeLinecap="round"
-                            fill="transparent"
-                            r={radius}
-                            cx={size / 2}
-                            cy={size / 2}
-                        />
-                        <text 
-                            x="50%" 
-                            y="50%" 
-                            textAnchor="middle" 
-                            dy=".3em" 
-                            fontSize="16" 
-                            fontWeight="bold"
-                            fill={color}
-                        >
-                            {Math.round((value / max) * 100)}%
-                        </text>
-                    </svg>
-                );
-            };
-
-            return (
-                <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-8 px-4">
-                    <div className="max-w-7xl mx-auto">
-                        <div className="text-center mb-8">
-                            <h1 className="text-4xl font-bold text-gray-800 mb-2">
-                                <i className="fas fa-chart-line text-purple-500 mr-3"></i>
-                                Modern Accounting Manager
-                            </h1>
-                            <p className="text-gray-600">Track revenue, expenses, and profits with advanced analytics</p>
-                        </div>
-
-                        <div className="flex justify-center mb-8">
-                            <div className="glass-effect rounded-xl p-1 flex">
-                                {['overview', 'analytics', 'transactions'].map(tab => (
-                                    <button
-                                        key={tab}
-                                        onClick={() => setActiveTab(tab)}
-                                        className={`px-6 py-3 rounded-lg capitalize font-medium transition-all duration-300 ${
-                                            activeTab === tab
-                                                ? 'bg-white text-purple-600 shadow-md'
-                                                : 'text-gray-600 hover:text-purple-500'
-                                        }`}
-                                    >
-                                        <i className={`fas ${
-                                            tab === 'overview' ? 'fa-home' :
-                                            tab === 'analytics' ? 'fa-chart-bar' : 'fa-receipt'
-                                        } mr-2`}></i>
-                                        {tab}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                            <div className="bg-white rounded-xl shadow-lg p-6 text-center hover-lift">
-                                <div className="text-2xl font-bold text-green-600">{formatCurrency(revenue)}</div>
-                                <div className="text-sm text-gray-600">Total Revenue</div>
-                                <i className="fas fa-arrow-up text-green-500 mt-2"></i>
-                            </div>
-                            <div className="bg-white rounded-xl shadow-lg p-6 text-center hover-lift">
-                                <div className="text-2xl font-bold text-red-600">{formatCurrency(expenses)}</div>
-                                <div className="text-sm text-gray-600">Total Expenses</div>
-                                <i className="fas fa-arrow-down text-red-500 mt-2"></i>
-                            </div>
-                            <div className="bg-white rounded-xl shadow-lg p-6 text-center hover-lift">
-                                <div className={`text-2xl font-bold ${profit >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                                    {formatCurrency(profit)}
-                                </div>
-                                <div className="text-sm text-gray-600">Net Profit</div>
-                                <i className={`fas ${profit >= 0 ? 'fa-smile text-blue-500' : 'fa-frown text-red-500'} mt-2`}></i>
-                            </div>
-                            <div className="bg-white rounded-xl shadow-lg p-6 text-center hover-lift">
-                                <div className={`text-2xl font-bold ${profitMargin >= 0 ? 'text-purple-600' : 'text-red-600'}`}>
-                                    {profitMargin.toFixed(1)}%
-                                </div>
-                                <div className="text-sm text-gray-600">Profit Margin</div>
-                                <i className="fas fa-percentage text-purple-500 mt-2"></i>
-                            </div>
-                        </div>
-
-                        {activeTab === 'overview' && (
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                                <div className="lg:col-span-1 space-y-6">
-                                    <div className="bg-white rounded-xl shadow-lg p-6 hover-lift">
-                                        <h2 className="text-xl font-semibold mb-4 text-gray-800">
-                                            <i className="fas fa-plus-circle text-green-500 mr-2"></i>
-                                            {editingId ? 'Edit Transaction' : 'Add Transaction'}
-                                        </h2>
-                                        <form onSubmit={editingId ? saveEdit : addTransaction} className="space-y-4">
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                    Type *
-                                                </label>
-                                                <select
-                                                    value={editingId ? editData.type : type}
-                                                    onChange={(e) => editingId 
-                                                        ? setEditData({...editData, type: e.target.value})
-                                                        : setType(e.target.value)
-                                                    }
-                                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
-                                                    required
-                                                >
-                                                    <option value="revenue">Revenue</option>
-                                                    <option value="expense">Expense</option>
-                                                </select>
-                                            </div>
-
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                    Category *
-                                                </label>
-                                                <select
-                                                    value={editingId ? editData.category : category}
-                                                    onChange={(e) => editingId
-                                                        ? setEditData({...editData, category: e.target.value})
-                                                        : setCategory(e.target.value)
-                                                    }
-                                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
-                                                    required
-                                                >
-                                                    <option value="">Select Category</option>
-                                                    {(editingId ? editData.type : type) === 'revenue' 
-                                                        ? revenueCategories.map(cat => (
-                                                            <option key={cat} value={cat}>{cat}</option>
-                                                        ))
-                                                        : expenseCategories.map(cat => (
-                                                            <option key={cat} value={cat}>{cat}</option>
-                                                        ))
-                                                    }
-                                                </select>
-                                            </div>
-
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                    Description *
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    value={editingId ? editData.description : description}
-                                                    onChange={(e) => editingId
-                                                        ? setEditData({...editData, description: e.target.value})
-                                                        : setDescription(e.target.value)
-                                                    }
-                                                    placeholder="Transaction description"
-                                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
-                                                    required
-                                                />
-                                            </div>
-
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                    Amount *
-                                                </label>
-                                                <input
-                                                    type="number"
-                                                    step="0.01"
-                                                    value={editingId ? editData.amount : amount}
-                                                    onChange={(e) => editingId
-                                                        ? setEditData({...editData, amount: e.target.value})
-                                                        : setAmount(e.target.value)
-                                                    }
-                                                    placeholder="0.00"
-                                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
-                                                    required
-                                                />
-                                            </div>
-
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                    Date *
-                                                </label>
-                                                <input
-                                                    type="date"
-                                                    value={editingId ? editData.date : date}
-                                                    onChange={(e) => editingId
-                                                        ? setEditData({...editData, date: e.target.value})
-                                                        : setDate(e.target.value)
-                                                    }
-                                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
-                                                    required
-                                                />
-                                            </div>
-
-                                            <div className="flex gap-2">
-                                                {editingId ? (
-                                                    <>
-                                                        <button
-                                                            type="submit"
-                                                            className="flex-1 bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition duration-200"
-                                                        >
-                                                            <i className="fas fa-save mr-2"></i>Save Changes
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            onClick={cancelEditing}
-                                                            className="bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600 transition duration-200"
-                                                        >
-                                                            Cancel
-                                                        </button>
-                                                    </>
-                                                ) : (
-                                                    <button
-                                                        type="submit"
-                                                        className="w-full bg-green-500 text-white py-3 px-4 rounded-lg hover:bg-green-600 transition duration-200 font-semibold"
-                                                    >
-                                                        <i className="fas fa-plus mr-2"></i>Add Transaction
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </form>
-                                    </div>
-
-                                    <div className="bg-white rounded-xl shadow-lg p-6 hover-lift">
-                                        <h3 className="text-lg font-semibold mb-4 text-gray-800">
-                                            <i className="fas fa-filter text-blue-500 mr-2"></i>
-                                            Filters
-                                        </h3>
-                                        <div className="space-y-4">
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    Transaction Type
-                                                </label>
-                                                <div className="flex gap-2 flex-wrap">
-                                                    {['all', 'revenue', 'expense'].map(f => (
-                                                        <button
-                                                            key={f}
-                                                            onClick={() => setFilter(f)}
-                                                            className={`px-3 py-2 rounded-lg capitalize text-sm ${
-                                                                filter === f
-                                                                    ? 'bg-blue-500 text-white'
-                                                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                                            }`}
-                                                        >
-                                                            {f}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    Time Range
-                                                </label>
-                                                <div className="flex gap-2 flex-wrap">
-                                                    {['all', 'month', 'week'].map(t => (
-                                                        <button
-                                                            key={t}
-                                                            onClick={() => setTimeRange(t)}
-                                                            className={`px-3 py-2 rounded-lg capitalize text-sm ${
-                                                                timeRange === t
-                                                                    ? 'bg-purple-500 text-white'
-                                                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                                            }`}
-                                                        >
-                                                            {t}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="lg:col-span-2 space-y-6">
-                                    <div className="bg-white rounded-xl shadow-lg p-6 hover-lift">
-                                        <h3 className="text-lg font-semibold mb-4 text-gray-800">
-                                            <i className="fas fa-chart-bar text-purple-500 mr-2"></i>
-                                            Financial Overview
-                                        </h3>
-                                        <div className="chart-container">
-                                            <canvas ref={financialChartRef}></canvas>
-                                        </div>
-                                    </div>
-
-                                    <div className="bg-white rounded-xl shadow-lg p-6 hover-lift">
-                                        <h3 className="text-lg font-semibold mb-4 text-gray-800">
-                                            <i className="fas fa-chart-pie text-orange-500 mr-2"></i>
-                                            Category Breakdown
-                                        </h3>
-                                        <div className="chart-container">
-                                            <canvas ref={categoryChartRef}></canvas>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {activeTab === 'analytics' && (
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                <div className="bg-white rounded-xl shadow-lg p-6 hover-lift">
-                                    <h3 className="text-lg font-semibold mb-4 text-gray-800">
-                                        <i className="fas fa-chart-line text-blue-500 mr-2"></i>
-                                        Monthly Trends
-                                    </h3>
-                                    <div className="chart-container">
-                                        <canvas ref={trendChartRef}></canvas>
-                                    </div>
-                                </div>
-
-                                <div className="bg-white rounded-xl shadow-lg p-6 hover-lift">
-                                    <h3 className="text-lg font-semibold mb-4 text-gray-800">
-                                        <i className="fas fa-money-bill-wave text-green-500 mr-2"></i>
-                                        Monthly Cash Flow
-                                    </h3>
-                                    <div className="chart-container">
-                                        <canvas ref={cashFlowChartRef}></canvas>
-                                    </div>
-                                </div>
-
-                                <div className="bg-white rounded-xl shadow-lg p-6 hover-lift">
-                                    <h3 className="text-lg font-semibold mb-4 text-gray-800">
-                                        <i className="fas fa-tachometer-alt text-purple-500 mr-2"></i>
-                                        Financial Health
-                                    </h3>
-                                    <div className="flex justify-around items-center">
-                                        <div className="text-center">
-                                            <ProgressRing 
-                                                value={profitMargin > 0 ? profitMargin : 0} 
-                                                max={50} 
-                                                color="#10b981" 
-                                            />
-                                            <p className="mt-2 text-sm font-medium">Profit Margin</p>
-                                        </div>
-                                        <div className="text-center">
-                                            <ProgressRing 
-                                                value={revenue > 0 ? (expenses / revenue) * 100 : 0} 
-                                                max={100} 
-                                                color="#ef4444" 
-                                            />
-                                            <p className="mt-2 text-sm font-medium">Expense Ratio</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="bg-white rounded-xl shadow-lg p-6 hover-lift">
-                                    <h3 className="text-lg font-semibold mb-4 text-gray-800">
-                                        <i className="fas fa-table text-orange-500 mr-2"></i>
-                                        Category Details
-                                    </h3>
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full">
-                                            <thead>
-                                                <tr className="border-b">
-                                                    <th className="text-left py-2">Category</th>
-                                                    <th className="text-right py-2">Amount</th>
-                                                    <th className="text-right py-2">Percentage</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {Object.entries(categoryBreakdown()).map(([cat, total]) => {
-                                                    const percentage = revenue > 0 ? (total / revenue) * 100 : 0;
-                                                    return (
-                                                        <tr key={cat} className="border-b border-gray-100">
-                                                            <td className="py-2">{cat}</td>
-                                                            <td className={`text-right font-medium ${
-                                                                revenueCategories.includes(cat) ? 'text-green-600' : 'text-red-600'
-                                                            }`}>
-                                                                {formatCurrency(total)}
-                                                            </td>
-                                                            <td className="text-right text-gray-600">
-                                                                {percentage.toFixed(1)}%
-                                                            </td>
-                                                        </tr>
-                                                    );
-                                                })}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {activeTab === 'transactions' && (
-                            <div className="bg-white rounded-xl shadow-lg p-6 hover-lift">
-                                <div className="flex justify-between items-center mb-4">
-                                    <h2 className="text-xl font-semibold text-gray-800">
-                                        <i className="fas fa-list text-blue-500 mr-2"></i>
-                                        Transactions ({filteredTransactions.length})
-                                    </h2>
-                                    <div className="text-sm text-gray-600">
-                                        Showing: {filter === 'all' ? 'All' : filter} • {timeRange === 'all' ? 'All time' : `This ${timeRange}`}
-                                    </div>
-                                </div>
-
-                                {filteredTransactions.length === 0 ? (
-                                    <div className="text-center py-8 text-gray-500">
-                                        <i className="fas fa-receipt text-4xl mb-4 text-gray-300"></i>
-                                        <p>No transactions found. Add your first transaction above!</p>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-3 max-h-96 overflow-y-auto">
-                                        {filteredTransactions.map(transaction => (
-                                            <div key={transaction.id} className="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition duration-200 fade-in">
-                                                <div className="flex justify-between items-start">
-                                                    <div className="flex-1">
-                                                        <div className="flex items-center gap-3 mb-1">
-                                                            <span className={`inline-block w-3 h-3 rounded-full ${
-                                                                transaction.type === 'revenue' ? 'bg-green-500' : 'bg-red-500'
-                                                            }`}></span>
-                                                            <span className="font-semibold text-gray-800">
-                                                                {transaction.description}
-                                                            </span>
-                                                            <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                                                                {transaction.category}
-                                                            </span>
-                                                        </div>
-                                                        <div className="text-sm text-gray-600 ml-6">
-                                                            {new Date(transaction.date).toLocaleDateString()} • 
-                                                            {transaction.type === 'revenue' ? ' Revenue' : ' Expense'}
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <span className={`font-bold ${
-                                                            transaction.type === 'revenue' ? 'text-green-600' : 'text-red-600'
-                                                        }`}>
-                                                            {transaction.type === 'revenue' ? '+' : '-'}{formatCurrency(transaction.amount)}
-                                                        </span>
-                                                        <div className="flex gap-1">
-                                                            <button
-                                                                onClick={() => startEditing(transaction)}
-                                                                className="p-1 text-blue-500 hover:bg-blue-50 rounded transition duration-200"
-                                                                title="Edit transaction"
-                                                            >
-                                                                <i className="fas fa-edit"></i>
-                                                            </button>
-                                                            <button
-                                                                onClick={() => deleteTransaction(transaction.id)}
-                                                                className="p-1 text-red-500 hover:bg-red-50 rounded transition duration-200"
-                                                                title="Delete transaction"
-                                                            >
-                                                                <i className="fas fa-trash"></i>
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        <div className="text-center mt-8 text-gray-500 text-sm">
-                            <p>All data is stored in memory during your session 💰</p>
-                        </div>
-                    </div>
-                </div>
-            );
+                transactions = [newTransaction, ...transactions];
+                resetForm();
+                saving = false;
+                renderApp();
+                initCharts();
+            }
         }
-
-        ReactDOM.render(<AccountingApp />, document.getElementById('root'));
-    </script>
+        
+        async function deleteTransaction(id) {
+            if (!confirm('Are you sure you want to delete this transaction?')) return;
+            
+            try {
+                if (firebaseReady && currentUser) {
+                    await firebase.firestore().collection('transactions_account').doc(id).delete();
+                }
+                transactions = transactions.filter(t => t.id !== id);
+                renderApp();
+                initCharts();
+            } catch (error) {
+                console.error("Error deleting transaction:", error);
+                transactions = transactions.filter(t => t.id !== id);
+                renderApp();
+                initCharts();
+            }
+        }
+        
+        function startEdit(id) {
+            const transaction = transactions.find(t => t.id === id);
+            if (!transaction) return;
+            
+            editingId = id;
+            editData = { ...transaction };
+            renderApp();
+        }
+        
+        function cancelEdit() {
+            editingId = null;
+            editData = {};
+            renderApp();
+        }
+        
+        async function saveEdit() {
+            try {
+                saving = true;
+                renderApp();
+                
+                if (firebaseReady && currentUser) {
+                    await firebase.firestore().collection('transactions_account').doc(editingId).update({
+                        ...editData,
+                        amount: parseFloat(editData.amount),
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+                
+                transactions = transactions.map(t => 
+                    t.id === editingId ? { ...editData, amount: parseFloat(editData.amount) } : t
+                );
+                cancelEdit();
+                saving = false;
+                renderApp();
+                initCharts();
+            } catch (error) {
+                console.error("Error updating transaction:", error);
+                transactions = transactions.map(t => 
+                    t.id === editingId ? { ...editData, amount: parseFloat(editData.amount) } : t
+                );
+                cancelEdit();
+                saving = false;
+                renderApp();
+                initCharts();
+            }
+        }
+        
+        function resetForm() {
+            description = '';
+            amount = '';
+            category = '';
+            date = new Date().toISOString().split('T')[0];
+        }
+        
+        function updateCategoryOptions() {
+            const selectedType = document.getElementById('transaction-type').value;
+            const categorySelect = document.getElementById('transaction-category');
+            
+            // Clear existing options
+            categorySelect.innerHTML = '<option value="">Select Category</option>';
+            
+            // Add new options based on type
+            const categories = selectedType === 'revenue' ? revenueCategories : expenseCategories;
+            categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                categorySelect.appendChild(option);
+            });
+        }
+        
+        // Public methods
+        window.accountingApp = {
+            setActiveTab: function(tab) {
+                activeTab = tab;
+                renderApp();
+                if (tab !== 'transactions') {
+                    initCharts();
+                }
+            },
+            
+            setFilter: function(newFilter) {
+                filter = newFilter;
+                renderApp();
+                initCharts();
+            },
+            
+            setTimeRange: function(newTimeRange) {
+                timeRange = newTimeRange;
+                renderApp();
+                initCharts();
+            },
+            
+            startEdit: function(id) {
+                startEdit(id);
+            },
+            
+            cancelEdit: function() {
+                cancelEdit();
+            },
+            
+            deleteTransaction: function(id) {
+                deleteTransaction(id);
+            }
+        };
+        
+        // Utility functions
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD'
+            }).format(value);
+        }
+        
+        // Get filtered transactions
+        const filteredTransactions = filterTransactions();
+        
+        // Initialize the app
+        init();
+    }
+</script>
 </body>
 </html>
