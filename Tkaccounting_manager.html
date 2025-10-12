@@ -283,6 +283,7 @@
             const [currentUser, setCurrentUser] = useState(null);
             const [firebaseReady, setFirebaseReady] = useState(false);
             const [authChecked, setAuthChecked] = useState(false);
+            const [chartsRendering, setChartsRendering] = useState(false);
             
             // State for filtering and views
             const [filter, setFilter] = useState('all');
@@ -612,6 +613,33 @@
                 }).format(value);
             };
 
+// FIXED: Render charts when activeTab changes or when switching to overview/analytics
+useEffect(() => {
+    if (transactions.length > 0 && !loading && currentUser) {
+        const timer = setTimeout(() => {
+            // Only render charts if we're on overview or analytics tab
+            if (activeTab === 'overview' || activeTab === 'analytics') {
+                console.log('Rendering charts for tab:', activeTab);
+                renderAllCharts();
+            }
+        }, 100);
+        
+        return () => clearTimeout(timer);
+    }
+}, [transactions, filter, timeRange, loading, currentUser, activeTab]); // Added activeTab dependency
+
+// NEW: Force re-render charts when switching to overview/analytics tabs
+useEffect(() => {
+    if ((activeTab === 'overview' || activeTab === 'analytics') && transactions.length > 0 && !loading) {
+        console.log('Tab switched to:', activeTab, '- re-rendering charts');
+        const timer = setTimeout(() => {
+            renderAllCharts();
+        }, 50);
+        
+        return () => clearTimeout(timer);
+    }
+}, [activeTab]); // This specifically watches for tab changes
+            
             // FIXED: Chart rendering with proper cleanup and timing
             useEffect(() => {
                 if (transactions.length > 0 && !loading && currentUser) {
@@ -636,16 +664,27 @@
             }, []);
 
             const renderAllCharts = () => {
-                if (typeof Chart === 'undefined') {
-                    console.log('Chart.js not loaded yet');
-                    return;
-                }
+    if (typeof Chart === 'undefined') {
+        console.log('Chart.js not loaded yet');
+        return;
+    }
 
-                renderFinancialChart();
-                renderCategoryChart();
-                renderTrendChart();
-                renderCashFlowChart();
-            };
+    setChartsRendering(true);
+    
+    try {
+        if (activeTab === 'overview') {
+            renderFinancialChart();
+            renderCategoryChart();
+        } else if (activeTab === 'analytics') {
+            renderTrendChart();
+            renderCashFlowChart();
+        }
+    } catch (error) {
+        console.error('Error rendering charts:', error);
+    } finally {
+        setChartsRendering(false);
+    }
+};
 
             const renderFinancialChart = () => {
                 if (!financialChartRef.current) {
