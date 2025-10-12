@@ -12,7 +12,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-  
+      
   <style>
     /* Reset and base styles */
     * {
@@ -55,7 +55,7 @@
   color: white;
   text-decoration: none;
   border-radius: 8px;
-  transition: var(--transition);
+  transition: all 0.3s ease;
   font-weight: 500;
   font-size: 0.9rem;
 }
@@ -73,6 +73,14 @@
 }
 
 /* Responsive adjustments for navigation */
+@media (max-width: 992px) {
+  .header-content {
+    flex-direction: column;
+    gap: 20px;
+    text-align: center;
+  }
+}
+
 @media (max-width: 1200px) {
   .header-nav {
     gap: 2px;
@@ -102,6 +110,17 @@
   }
 }
 
+@media (max-width: 576px) {
+  header {
+    padding: 20px;
+  }
+  
+  .logo {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+
     body {
       display: flex;
       flex-direction: column;
@@ -112,92 +131,93 @@
     }
 
     /* Header */
-    header {
-      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-      color: white;
-      padding: 25px 40px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      position: relative;
-      overflow: hidden;
-    }
+ 
+header {
+  background: linear-gradient(135deg, #3a86ff 0%, #8338ec 100%);
+  color: white;
+  padding: 25px 40px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  position: relative;
+  overflow: hidden;
+}
 
-    header::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0,0 L100,0 L100,100 Z" fill="rgba(255,255,255,0.1)"/></svg>');
-      background-size: cover;
-    }
+header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0,0 L100,0 L100,100 Z" fill="rgba(255,255,255,0.1)"/></svg>');
+  background-size: cover;
+}
 
-    .header-content {
-      position: relative;
-      z-index: 1;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+.header-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 
-    .logout-btn {
-      background: rgba(255,255,255,0.2);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 8px 15px;
-      cursor: pointer;
-      transition: var(--transition);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+.logout-btn {
+  background: rgba(255,255,255,0.2);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
-    .logout-btn:hover {
-      background: rgba(255,255,255,0.3);
-    }
+.logout-btn:hover {
+  background: rgba(255,255,255,0.3);
+}
 
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
 
-    .logo i {
-      font-size: 2.5rem;
-      background: rgba(255,255,255,0.2);
-      padding: 12px;
-      border-radius: 50%;
-    }
+.logo i {
+  font-size: 2.5rem;
+  background: rgba(255,255,255,0.2);
+  padding: 12px;
+  border-radius: 50%;
+}
 
-    .logo-text h1 {
-      font-size: 2.2rem;
-      font-weight: 700;
-      margin-bottom: 5px;
-    }
+.logo-text h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
 
-    .logo-text p {
-      font-size: 1rem;
-      opacity: 0.9;
-      font-weight: 300;
-    }
+.logo-text p {
+  font-size: 1rem;
+  opacity: 0.9;
+  font-weight: 300;
+}
 
-    .user-info {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
 
-    .user-avatar {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.5rem;
-    }
+.user-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
 
     /* Main Content */
     .main-content {
@@ -565,21 +585,16 @@
 <body>
   <!-- Business Insights Dashboard -->
   <div id="dashboard">
-    <header>
-      <div class="header-content">
-        <div class="logo">
-          <i class="fas fa-chart-line"></i>
-          <div class="logo-text">
-            <h1>TK Dashboard</h1>
-            <p>Business Insights & Learning Repository</p>
-          </div>
-        </div>
-        <div class="user-info">
-          <div class="user-avatar">
-            <i class="fas fa-user"></i>
-          </div>
-
-<!-- NAVIGATION TABS - ADD THIS SECTION -->
+   <header>
+  <div class="header-content">
+    <div class="logo">
+      <i class="fas fa-chart-line"></i>
+      <div class="logo-text">
+        <h1>TK Dashboard</h1>
+        <p>Business Insights & Learning Repository</p>
+      </div>
+    </div>
+    
     <nav class="header-nav">
       <a href="dashboard.html" class="nav-link">
         <i class="fas fa-home"></i>
@@ -606,17 +621,21 @@
         <span>Tax</span>
       </a>
     </nav>
-    <!-- END OF NAVIGATION TABS -->
-          <div>
-            <p>Welcome back, <strong id="admin-name">Admin</strong></p>
-            <p id="admin-email" style="font-size: 0.8rem; opacity: 0.8;">admin@tkdashboard.com</p>
-          </div>
-          <button id="logout-btn" class="logout-btn" onclick="window.location.href='index.html'">
-            <i class="fas fa-sign-out-alt"></i> Logout
-          </button>
-        </div>
+    
+    <div class="user-info">
+      <div class="user-avatar">
+        <i class="fas fa-user"></i>
       </div>
-    </header>
+      <div>
+        <p>Welcome back, <strong id="admin-name">Admin</strong></p>
+        <p id="admin-email" style="font-size: 0.8rem; opacity: 0.8;">admin@tkdashboard.com</p>
+      </div>
+      <button id="logout-btn" class="logout-btn" onclick="window.location.href='index.html'">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </button>
+    </div>
+  </div>
+</header>
 
     <div class="main-content">
       <section class="page-title">
