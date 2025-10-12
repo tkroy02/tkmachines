@@ -21,7 +21,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 
     <style>
-        /* Your existing styles remain exactly the same */
         * {
             margin: 0;
             padding: 0;
@@ -297,6 +296,14 @@
             const categoryChartRef = useRef(null);
             const trendChartRef = useRef(null);
             const cashFlowChartRef = useRef(null);
+
+            // Chart instances
+            const [chartInstances, setChartInstances] = useState({
+                financialChart: null,
+                categoryChart: null,
+                trendChart: null,
+                cashFlowChart: null
+            });
 
             // Categories
             const revenueCategories = ['Sales', 'Services', 'Investments', 'Other Income'];
@@ -605,59 +612,298 @@
                 }).format(value);
             };
 
-            // Initialize charts when data changes
+            // FIXED: Chart rendering with proper cleanup and timing
             useEffect(() => {
-                if (transactions.length > 0 && !loading) {
-                    setTimeout(() => {
-                        renderFinancialChart();
-                        renderCategoryChart();
-                        renderTrendChart();
-                        renderCashFlowChart();
-                    }, 0);
+                if (transactions.length > 0 && !loading && currentUser) {
+                    const timer = setTimeout(() => {
+                        console.log('Rendering charts...');
+                        renderAllCharts();
+                    }, 100);
+                    
+                    return () => clearTimeout(timer);
                 }
-            }, [transactions, filter, timeRange, loading]);
+            }, [transactions, filter, timeRange, loading, currentUser]);
 
-            // Show loading screen while checking auth
-            if (!authChecked || loading) {
-                return (
-                    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-8 px-4 flex items-center justify-center">
-                        <div className="text-center">
-                            <div className="loading-spinner mb-4"></div>
-                            <p className="text-gray-600">
-                                {!authChecked ? 'Checking authentication...' : 'Loading your accounting data...'}
-                            </p>
-                        </div>
-                    </div>
-                );
-            }
+            // Clean up charts on unmount
+            useEffect(() => {
+                return () => {
+                    Object.values(chartInstances).forEach(chart => {
+                        if (chart && typeof chart.destroy === 'function') {
+                            chart.destroy();
+                        }
+                    });
+                };
+            }, []);
 
-            // Show auth required message if no user
-            if (!currentUser) {
-                return (
-                    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-8 px-4 flex items-center justify-center">
-                        <div className="text-center">
-                            <div className="bg-white rounded-xl shadow-lg p-8 max-w-md mx-auto">
-                                <i className="fas fa-lock text-4xl text-red-500 mb-4"></i>
-                                <h2 className="text-2xl font-bold text-gray-800 mb-4">Authentication Required</h2>
-                                <p className="text-gray-600 mb-6">Please log in to access the accounting manager.</p>
-                                <button 
-                                    onClick={() => window.location.href = 'login.html'}
-                                    className="bg-blue-500 text-white py-3 px-6 rounded-lg hover:bg-blue-600 transition duration-200 font-semibold"
-                                >
-                                    <i className="fas fa-sign-in-alt mr-2"></i>
-                                    Go to Login
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                );
-            }
+            const renderAllCharts = () => {
+                if (typeof Chart === 'undefined') {
+                    console.log('Chart.js not loaded yet');
+                    return;
+                }
 
-            const { revenue, expenses, profit, profitMargin } = calculateTotals();
-            const filteredTransactions = filterTransactions();
+                renderFinancialChart();
+                renderCategoryChart();
+                renderTrendChart();
+                renderCashFlowChart();
+            };
 
-            // [Keep all your existing chart functions and JSX exactly as they were]
-            // ... (all the chart functions remain identical to your original)
+            const renderFinancialChart = () => {
+                if (!financialChartRef.current) {
+                    console.log('Financial chart canvas not ready');
+                    return;
+                }
+
+                const ctx = financialChartRef.current.getContext('2d');
+                if (!ctx) return;
+
+                // Destroy previous chart
+                if (chartInstances.financialChart) {
+                    chartInstances.financialChart.destroy();
+                }
+
+                const { revenue, expenses, profit } = calculateTotals();
+                
+                const data = {
+                    labels: ['Revenue', 'Expenses', 'Profit'],
+                    datasets: [{
+                        data: [revenue, expenses, profit],
+                        backgroundColor: [
+                            'rgba(16, 185, 129, 0.8)',
+                            'rgba(239, 68, 68, 0.8)',
+                            'rgba(59, 130, 246, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgb(16, 185, 129)',
+                            'rgb(239, 68, 68)',
+                            'rgb(59, 130, 246)'
+                        ],
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        borderSkipped: false,
+                    }]
+                };
+                
+                const newChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: data,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.label}: ${formatCurrency(context.raw)}`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return formatCurrency(value);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                setChartInstances(prev => ({ ...prev, financialChart: newChart }));
+            };
+
+            const renderCategoryChart = () => {
+                if (!categoryChartRef.current) {
+                    console.log('Category chart canvas not ready');
+                    return;
+                }
+
+                const ctx = categoryChartRef.current.getContext('2d');
+                if (!ctx) return;
+
+                // Destroy previous chart
+                if (chartInstances.categoryChart) {
+                    chartInstances.categoryChart.destroy();
+                }
+
+                const breakdown = categoryBreakdown();
+                const labels = Object.keys(breakdown);
+                const data = Object.values(breakdown);
+                
+                const backgroundColors = labels.map((_, i) => {
+                    const hue = (i * 137.5) % 360;
+                    return `hsla(${hue}, 70%, 65%, 0.8)`;
+                });
+                
+                const borderColors = labels.map((_, i) => {
+                    const hue = (i * 137.5) % 360;
+                    return `hsl(${hue}, 70%, 50%)`;
+                });
+                
+                const newChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: data,
+                            backgroundColor: backgroundColors,
+                            borderColor: borderColors,
+                            borderWidth: 2,
+                            hoverOffset: 15
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    boxWidth: 12,
+                                    padding: 15
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const value = context.raw;
+                                        const total = data.reduce((a, b) => a + b, 0);
+                                        const percentage = ((value / total) * 100).toFixed(1);
+                                        return `${context.label}: ${formatCurrency(value)} (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                setChartInstances(prev => ({ ...prev, categoryChart: newChart }));
+            };
+
+            const renderTrendChart = () => {
+                if (!trendChartRef.current) {
+                    console.log('Trend chart canvas not ready');
+                    return;
+                }
+
+                const ctx = trendChartRef.current.getContext('2d');
+                if (!ctx) return;
+
+                // Destroy previous chart
+                if (chartInstances.trendChart) {
+                    chartInstances.trendChart.destroy();
+                }
+
+                const trendData = getMonthlyTrendData();
+                
+                const newChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: trendData.labels,
+                        datasets: [
+                            {
+                                label: 'Revenue',
+                                data: trendData.revenue,
+                                borderColor: 'rgb(16, 185, 129)',
+                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                tension: 0.3,
+                                fill: true
+                            },
+                            {
+                                label: 'Expenses',
+                                data: trendData.expenses,
+                                borderColor: 'rgb(239, 68, 68)',
+                                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                tension: 0.3,
+                                fill: true
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.dataset.label}: ${formatCurrency(context.raw)}`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return formatCurrency(value);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                setChartInstances(prev => ({ ...prev, trendChart: newChart }));
+            };
+
+            const renderCashFlowChart = () => {
+                if (!cashFlowChartRef.current) {
+                    console.log('Cash flow chart canvas not ready');
+                    return;
+                }
+
+                const ctx = cashFlowChartRef.current.getContext('2d');
+                if (!ctx) return;
+
+                // Destroy previous chart
+                if (chartInstances.cashFlowChart) {
+                    chartInstances.cashFlowChart.destroy();
+                }
+
+                const cashFlow = getCashFlowData();
+                
+                const newChart = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Revenue', 'Expenses'],
+                        datasets: [{
+                            data: [cashFlow.revenue, cashFlow.expenses],
+                            backgroundColor: [
+                                'rgba(16, 185, 129, 0.8)',
+                                'rgba(239, 68, 68, 0.8)'
+                            ],
+                            borderColor: [
+                                'rgb(16, 185, 129)',
+                                'rgb(239, 68, 68)'
+                            ],
+                            borderWidth: 2,
+                            hoverOffset: 15
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.label}: ${formatCurrency(context.raw)}`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                setChartInstances(prev => ({ ...prev, cashFlowChart: newChart }));
+            };
+
             const categoryBreakdown = () => {
                 const breakdown = {};
                 filteredTransactions.forEach(t => {
@@ -717,229 +963,6 @@
                 return cashFlow;
             };
 
-            const renderFinancialChart = () => {
-                const ctx = financialChartRef.current?.getContext('2d');
-                if (!ctx) return;
-                
-                if (window.financialChart) {
-                    window.financialChart.destroy();
-                }
-                
-                const data = {
-                    labels: ['Revenue', 'Expenses', 'Profit'],
-                    datasets: [{
-                        data: [revenue, expenses, profit],
-                        backgroundColor: [
-                            'rgba(16, 185, 129, 0.8)',
-                            'rgba(239, 68, 68, 0.8)',
-                            'rgba(59, 130, 246, 0.8)'
-                        ],
-                        borderColor: [
-                            'rgb(16, 185, 129)',
-                            'rgb(239, 68, 68)',
-                            'rgb(59, 130, 246)'
-                        ],
-                        borderWidth: 2,
-                        borderRadius: 8,
-                        borderSkipped: false,
-                    }]
-                };
-                
-                window.financialChart = new Chart(ctx, {
-                    type: 'bar',
-                    data: data,
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: false
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return `${context.label}: ${formatCurrency(context.raw)}`;
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    callback: function(value) {
-                                        return formatCurrency(value);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            };
-
-            const renderCategoryChart = () => {
-                const ctx = categoryChartRef.current?.getContext('2d');
-                if (!ctx) return;
-                
-                if (window.categoryChart) {
-                    window.categoryChart.destroy();
-                }
-                
-                const breakdown = categoryBreakdown();
-                const labels = Object.keys(breakdown);
-                const data = Object.values(breakdown);
-                
-                const backgroundColors = labels.map((_, i) => {
-                    const hue = (i * 137.5) % 360;
-                    return `hsla(${hue}, 70%, 65%, 0.8)`;
-                });
-                
-                const borderColors = labels.map((_, i) => {
-                    const hue = (i * 137.5) % 360;
-                    return `hsl(${hue}, 70%, 50%)`;
-                });
-                
-                window.categoryChart = new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            data: data,
-                            backgroundColor: backgroundColors,
-                            borderColor: borderColors,
-                            borderWidth: 2,
-                            hoverOffset: 15
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'right',
-                                labels: {
-                                    boxWidth: 12,
-                                    padding: 15
-                                }
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        const value = context.raw;
-                                        const total = data.reduce((a, b) => a + b, 0);
-                                        const percentage = ((value / total) * 100).toFixed(1);
-                                        return `${context.label}: ${formatCurrency(value)} (${percentage}%)`;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            };
-
-            const renderTrendChart = () => {
-                const ctx = trendChartRef.current?.getContext('2d');
-                if (!ctx) return;
-                
-                if (window.trendChart) {
-                    window.trendChart.destroy();
-                }
-                
-                const trendData = getMonthlyTrendData();
-                
-                window.trendChart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: trendData.labels,
-                        datasets: [
-                            {
-                                label: 'Revenue',
-                                data: trendData.revenue,
-                                borderColor: 'rgb(16, 185, 129)',
-                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                                tension: 0.3,
-                                fill: true
-                            },
-                            {
-                                label: 'Expenses',
-                                data: trendData.expenses,
-                                borderColor: 'rgb(239, 68, 68)',
-                                backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                                tension: 0.3,
-                                fill: true
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return `${context.dataset.label}: ${formatCurrency(context.raw)}`;
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    callback: function(value) {
-                                        return formatCurrency(value);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            };
-
-            const renderCashFlowChart = () => {
-                const ctx = cashFlowChartRef.current?.getContext('2d');
-                if (!ctx) return;
-                
-                if (window.cashFlowChart) {
-                    window.cashFlowChart.destroy();
-                }
-                
-                const cashFlow = getCashFlowData();
-                
-                window.cashFlowChart = new Chart(ctx, {
-                    type: 'pie',
-                    data: {
-                        labels: ['Revenue', 'Expenses'],
-                        datasets: [{
-                            data: [cashFlow.revenue, cashFlow.expenses],
-                            backgroundColor: [
-                                'rgba(16, 185, 129, 0.8)',
-                                'rgba(239, 68, 68, 0.8)'
-                            ],
-                            borderColor: [
-                                'rgb(16, 185, 129)',
-                                'rgb(239, 68, 68)'
-                            ],
-                            borderWidth: 2,
-                            hoverOffset: 15
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return `${context.label}: ${formatCurrency(context.raw)}`;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            };
-
             const ProgressRing = ({ value, max, size = 120, strokeWidth = 10, color }) => {
                 const radius = (size - strokeWidth) / 2;
                 const circumference = radius * 2 * Math.PI;
@@ -974,7 +997,46 @@
                 );
             };
 
-            // Your main JSX return (keep everything exactly as you had it)
+            // Show loading screen while checking auth
+            if (!authChecked || loading) {
+                return (
+                    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-8 px-4 flex items-center justify-center">
+                        <div className="text-center">
+                            <div className="loading-spinner mb-4"></div>
+                            <p className="text-gray-600">
+                                {!authChecked ? 'Checking authentication...' : 'Loading your accounting data...'}
+                            </p>
+                        </div>
+                    </div>
+                );
+            }
+
+            // Show auth required message if no user
+            if (!currentUser) {
+                return (
+                    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-8 px-4 flex items-center justify-center">
+                        <div className="text-center">
+                            <div className="bg-white rounded-xl shadow-lg p-8 max-w-md mx-auto">
+                                <i className="fas fa-lock text-4xl text-red-500 mb-4"></i>
+                                <h2 className="text-2xl font-bold text-gray-800 mb-4">Authentication Required</h2>
+                                <p className="text-gray-600 mb-6">Please log in to access the accounting manager.</p>
+                                <button 
+                                    onClick={() => window.location.href = 'login.html'}
+                                    className="bg-blue-500 text-white py-3 px-6 rounded-lg hover:bg-blue-600 transition duration-200 font-semibold"
+                                >
+                                    <i className="fas fa-sign-in-alt mr-2"></i>
+                                    Go to Login
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            const { revenue, expenses, profit, profitMargin } = calculateTotals();
+            const filteredTransactions = filterTransactions();
+
+            // Your main JSX return
             return (
                 <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-8 px-4">
                     <div className="max-w-7xl mx-auto">
@@ -989,7 +1051,6 @@
                             </div>
                         </div>
 
-                        {/* Rest of your JSX remains exactly the same */}
                         <div className="flex justify-center mb-8">
                             <div className="glass-effect rounded-xl p-1 flex">
                                 {['overview', 'analytics', 'transactions'].map(tab => (
