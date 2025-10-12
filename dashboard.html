@@ -69,22 +69,22 @@
       align-items: center;
     }
 
-.logout-btn {
-  background: rgba(255,255,255,0.2);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 15px;
-  cursor: pointer;
-  transition: var(--transition);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+    .logout-btn {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 15px;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
 
-.logout-btn:hover {
-  background: rgba(255,255,255,0.3);
-}
+    .logout-btn:hover {
+      background: rgba(255,255,255,0.3);
+    }
 
     .logo {
       display: flex;
@@ -255,39 +255,42 @@
       color: var(--primary-dark);
     }
 
-    /* Stats Section */
-    .stats-section {
+    /* TK Links Section */
+    .tk-links-section {
       margin-top: 40px;
     }
 
-    .stats-section h2 {
+    .tk-links-section h2 {
       font-size: 1.8rem;
       margin-bottom: 25px;
       color: var(--dark);
     }
 
-    .stats-grid {
+    .tk-links-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
       gap: 20px;
     }
 
-    .stat-card {
+    .tk-link-card {
       background: white;
       border-radius: var(--border-radius);
       box-shadow: var(--box-shadow);
       padding: 25px;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 20px;
+      gap: 15px;
       transition: var(--transition);
+      text-align: center;
     }
 
-    .stat-card:hover {
+    .tk-link-card:hover {
       transform: translateY(-5px);
+      box-shadow: 0 15px 30px rgba(0,0,0,0.12);
     }
 
-    .stat-icon {
+    .tk-link-icon {
       width: 60px;
       height: 60px;
       border-radius: 50%;
@@ -298,30 +301,52 @@
       color: white;
     }
 
-    .stat-1 .stat-icon {
+    .tk-lesson .tk-link-icon {
       background: var(--primary);
     }
 
-    .stat-2 .stat-icon {
+    .tk-primary .tk-link-icon {
       background: var(--success);
     }
 
-    .stat-3 .stat-icon {
+    .tk-noun .tk-link-icon {
       background: var(--warning);
     }
 
-    .stat-4 .stat-icon {
+    .tk-jamb .tk-link-icon {
       background: var(--secondary);
     }
 
-    .stat-info h3 {
-      font-size: 1.8rem;
+    .tk-link-info h3 {
+      font-size: 1.3rem;
       margin-bottom: 5px;
     }
 
-    .stat-info p {
+    .tk-link-info p {
       color: var(--gray);
       font-size: 0.9rem;
+      margin-bottom: 15px;
+    }
+
+    .tk-link-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      cursor: pointer;
+      transition: var(--transition);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+
+    .tk-link-btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
     }
 
     /* Footer */
@@ -390,7 +415,7 @@
         grid-template-columns: 1fr;
       }
       
-      .stats-grid {
+      .tk-links-grid {
         grid-template-columns: 1fr;
       }
       
@@ -418,17 +443,18 @@
           </div>
         </div>
         <div class="user-info">
-  <div class="user-avatar">
-    <i class="fas fa-user"></i>
-  </div>
-  <div>
-    <p>Welcome back, <strong id="admin-name">Admin</strong></p>
-    <p id="admin-email" style="font-size: 0.8rem; opacity: 0.8;">admin@tkdashboard.com</p>
-  </div>
-  <button id="logout-btn" class="logout-btn" onclick="window.location.href='index.html'">
-    <i class="fas fa-sign-out-alt"></i> Logout
-  </button>
-</div>
+          <div class="user-avatar">
+            <i class="fas fa-user"></i>
+          </div>
+          <div>
+            <p>Welcome back, <strong id="admin-name">Admin</strong></p>
+            <p id="admin-email" style="font-size: 0.8rem; opacity: 0.8;">admin@tkdashboard.com</p>
+          </div>
+          <button id="logout-btn" class="logout-btn" onclick="window.location.href='index.html'">
+            <i class="fas fa-sign-out-alt"></i> Logout
+          </button>
+        </div>
+      </div>
     </header>
 
     <div class="main-content">
@@ -494,57 +520,63 @@
         </div>
       </section>
 
-      <section class="stats-section">
-        <h2>Quick Stats</h2>
-        <div class="stats-grid">
-          <div class="stat-card stat-1">
-            <div class="stat-icon">
-              <i class="fas fa-users"></i>
+      <section class="tk-links-section">
+        <h2>TK Resources</h2>
+        <div class="tk-links-grid">
+          <div class="tk-link-card tk-lesson">
+            <div class="tk-link-icon">
+              <i class="fas fa-graduation-cap"></i>
             </div>
-            <div class="stat-info">
-              <h3>1,254</h3>
-              <p>Active Users</p>
+            <div class="tk-link-info">
+              <h3>TK Lesson</h3>
+              <p>Educational resources and learning materials</p>
             </div>
+            <a href="https://tklesson.com" target="_blank" class="tk-link-btn">
+              Visit Site <i class="fas fa-external-link-alt"></i>
+            </a>
           </div>
           
-          <div class="stat-card stat-2">
-            <div class="stat-icon">
-              <i class="fas fa-check-circle"></i>
+          <div class="tk-link-card tk-primary">
+            <div class="tk-link-icon">
+              <i class="fas fa-school"></i>
             </div>
-            <div class="stat-info">
-              <h3>89%</h3>
-              <p>Tasks Completed</p>
+            <div class="tk-link-info">
+              <h3>TK Primary</h3>
+              <p>Primary education resources and tools</p>
             </div>
+            <a href="https://tkprimary.com" target="_blank" class="tk-link-btn">
+              Visit Site <i class="fas fa-external-link-alt"></i>
+            </a>
           </div>
           
-          <div class="stat-card stat-3">
-            <div class="stat-icon">
-              <i class="fas fa-chart-bar"></i>
+          <div class="tk-link-card tk-noun">
+            <div class="tk-link-icon">
+              <i class="fas fa-university"></i>
             </div>
-            <div class="stat-info">
-              <h3>24.5%</h3>
-              <p>Revenue Growth</p>
+            <div class="tk-link-info">
+              <h3>TK NOUN</h3>
+              <p>National Open University resources</p>
             </div>
+            <a href="https://tknoun.com" target="_blank" class="tk-link-btn">
+              Visit Site <i class="fas fa-external-link-alt"></i>
+            </a>
           </div>
           
-          <div class="stat-card stat-4">
-            <div class="stat-icon">
-              <i class="fas fa-comment-dots"></i>
+          <div class="tk-link-card tk-jamb">
+            <div class="tk-link-icon">
+              <i class="fas fa-pencil-alt"></i>
             </div>
-            <div class="stat-info">
-              <h3>342</h3>
-              <p>New Messages</p>
+            <div class="tk-link-info">
+              <h3>TK JAMB</h3>
+              <p>Joint Admissions resources and preparation</p>
             </div>
+            <a href="https://tkjamb.com" target="_blank" class="tk-link-btn">
+              Visit Site <i class="fas fa-external-link-alt"></i>
+            </a>
           </div>
         </div>
       </section>
     </div>
-
-<script>
-  document.getElementById('logout-btn').addEventListener('click', function() {
-    window.location.href = 'index.html';
-  });
-</script>
 
     <footer>
       <div class="footer-content">
