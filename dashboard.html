@@ -61,6 +61,71 @@
       background-size: cover;
     }
 
+/* Navigation Tabs Styles */
+.header-nav {
+  display: flex;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 5px;
+  backdrop-filter: blur(10px);
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 15px;
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: var(--transition);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.nav-link:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.nav-link.active {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.nav-link i {
+  font-size: 0.9rem;
+}
+
+/* Responsive adjustments for navigation */
+@media (max-width: 1200px) {
+  .header-nav {
+    gap: 2px;
+  }
+  
+  .nav-link {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+  
+  .nav-link span {
+    display: none;
+  }
+  
+  .nav-link i {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-nav {
+    order: 3;
+    grid-column: 1 / -1;
+    margin-top: 15px;
+    width: 100%;
+    justify-content: center;
+  }
+}
+    
     .header-content {
       position: relative;
       z-index: 1;
@@ -442,6 +507,33 @@
             <p>Access all your TK tools in one place</p>
           </div>
         </div>
+         <!-- Navigation Tabs -->
+    <nav class="header-nav">
+      <a href="dashboard.html" class="nav-link active">
+        <i class="fas fa-home"></i>
+        <span>Home</span>
+      </a>
+      <a href="Tkmarketing.html" class="nav-link">
+        <i class="fas fa-chart-line"></i>
+        <span>Marketing</span>
+      </a>
+      <a href="Tkinsights.html" class="nav-link">
+        <i class="fas fa-lightbulb"></i>
+        <span>Insights</span>
+      </a>
+      <a href="Tktask_manager.html" class="nav-link">
+        <i class="fas fa-tasks"></i>
+        <span>Tasks</span>
+      </a>
+      <a href="Tkaccounting_manager.html" class="nav-link">
+        <i class="fas fa-calculator"></i>
+        <span>Accounting</span>
+      </a>
+      <a href="gst-hst-calculator.html" class="nav-link">
+        <i class="fas fa-file-invoice-dollar"></i>
+        <span>Tax</span>
+      </a>
+    </nav>
         <div class="user-info">
           <div class="user-avatar">
             <i class="fas fa-user"></i>
